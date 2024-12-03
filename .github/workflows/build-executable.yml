@@ -1,0 +1,101 @@
+name: Build Executable
+
+on: [push, pull_request]
+
+jobs:
+  pyinstaller-build:
+    runs-on: windows-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.10"
+          cache: "pip"
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Install dependencies
+        run: |
+          poetry install --no-interaction
+
+      - name: Install pyinstaller
+        run: |
+          source $VENV
+          export PYINSTALLER_COMPILE_BOOTLOADER="true"
+          pip install --force-reinstall --ignore-installed --no-binary :all: pyinstaller==6.10.0
+
+      - name: Install llamacpp with OpenBLAS support
+        run: |
+          pip install --upgrade pip setuptools
+          pip uninstall -y llama-cpp-python
+          export CMAKE_ARGS="-DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS"
+          pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90
+
+      - name: Determine paths for dependencies
+        id: determine_paths
+        run: |
+          $ONNXRUNTIME_DLL = poetry run python -c 'import os, onnxruntime; print(os.path.join(os.path.dirname(onnxruntime.__file__), "capi", "onnxruntime_providers_shared.dll"))'
+          $LLAMACPP_DLL = poetry run python -c 'import os, llama_cpp; print(os.path.join(os.path.dirname(llama_cpp.__file__), "lib", "llama.dll"))'
+          $VAD_MODEL = poetry run python -c 'import os, pysilero_vad; print(os.path.join(os.path.dirname(pysilero_vad.__file__), "models", "silero_vad.onnx"))'
+          echo "ONNXRUNTIME_DLL=$ONNXRUNTIME_DLL" >> $env:GITHUB_ENV
+          echo "LLAMACPP_DLL=$LLAMACPP_DLL" >> $env:GITHUB_ENV
+          echo "VAD_MODEL=$VAD_MODEL" >> $env:GITHUB_ENV
+
+      - name: Debug environment variables
+        run: |
+          echo "ONNXRUNTIME_DLL=${{ env.ONNXRUNTIME_DLL }}"
+          echo "LLAMACPP_DLL=${{ env.LLAMACPP_DLL }}"
+          echo "VAD_MODEL=${{ env.VAD_MODEL }}"
+
+      - name: Create Executable for AIServer
+        run: |
+          pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
+
+      - name: Get current commit ID
+        id: get_commit
+        run: |
+          $COMMIT_ID = git rev-parse HEAD
+          echo "COMMIT_ID=$COMMIT_ID" >> $env:GITHUB_ENV
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AIServer_v${{ env.COMMIT_ID }}
+          path: ./dist
+          compression-level: 0 # no compression
+
+      - name: Add msbuild to PATH
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Install Vulkan SDK
+        uses: humbletim/install-vulkan-sdk@v1.1.1
+        with:
+          version: 1.3.261.1
+          cache: true
+
+      - name: Install llamacpp with Vulkan support
+        run: |
+          pip install --upgrade pip setuptools
+          pip uninstall -y llama-cpp-python
+          $Env:CMAKE_ARGS = "-DGGML_VULKAN=on"
+          pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90
+
+      - name: Create Executable for AIServer with llamacpp[vulkan]
+        run: |
+          pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: AIServer_v${{ env.COMMIT_ID }}-vulkan
+          path: ./dist
+          compression-level: 0 # no compression

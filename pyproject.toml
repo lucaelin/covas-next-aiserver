@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "covas-next-aiserver"
+version = "0.1.0"
+description = ""
+authors = ["Luca Haneklau <git@luca.lsys.ac>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "~3.10.14"
+av = "12.3.0"
+ctranslate2 = "4.3.1"
+edge-tts = "6.1.12"
+faster-whisper = "1.0.3"
+flask = "3.0.3"
+h11 = "0.14.0"
+httpcore = "1.0.5"
+httpx = "0.27.0"
+huggingface-hub = "0.23.5"
+kthread = "0.2.3"
+llama-cpp-python = "0.2.90"
+miniaudio = "1.61"
+onnxruntime = "1.18.1"
+openai = "1.37.1"
+pick = "2.4.0"
+pillow = "10.4.0"
+pydantic = "2.9.1"
+pydantic-core = "2.23.3"
+pyinstaller = "6.9.0"
+pyinstaller-hooks-contrib = "2024.7"
+pysilero-vad = "1.0.0"
+requests = "2.32.3"
+samplerate = "0.2.1"
+soundfile = "0.12.1"
+speechrecognition = "3.10.4"
+sherpa-onnx = "1.10.29"
+cached-path = "^1.6.4"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
