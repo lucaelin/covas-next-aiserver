@@ -6,7 +6,7 @@ authors = ["Luca Haneklau <git@luca.lsys.ac>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "~3.10.14"
+python = "~3.10.11"
 av = "12.3.0"
 ctranslate2 = "4.3.1"
 edge-tts = "6.1.12"
