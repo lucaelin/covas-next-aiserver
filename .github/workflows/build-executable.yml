@@ -43,12 +43,12 @@ jobs:
       - name: Determine paths for dependencies
         id: determine_paths
         run: |
-          $ONNXRUNTIME_DLL = poetry run python -c 'import os, onnxruntime; print(os.path.join(os.path.dirname(onnxruntime.__file__), "capi", "onnxruntime_providers_shared.dll"))'
-          $LLAMACPP_DLL = poetry run python -c 'import os, llama_cpp; print(os.path.join(os.path.dirname(llama_cpp.__file__), "lib", "llama.dll"))'
-          $VAD_MODEL = poetry run python -c 'import os, pysilero_vad; print(os.path.join(os.path.dirname(pysilero_vad.__file__), "models", "silero_vad.onnx"))'
-          echo "ONNXRUNTIME_DLL=$ONNXRUNTIME_DLL" >> $env:GITHUB_ENV
-          echo "LLAMACPP_DLL=$LLAMACPP_DLL" >> $env:GITHUB_ENV
-          echo "VAD_MODEL=$VAD_MODEL" >> $env:GITHUB_ENV
+          export ONNXRUNTIME_DLL=$(poetry run python -c 'import os, onnxruntime; print(os.path.join(os.path.dirname(onnxruntime.__file__), "capi", "onnxruntime_providers_shared.dll"))')
+          export LLAMACPP_DLL=$(poetry run python -c 'import os, llama_cpp; print(os.path.join(os.path.dirname(llama_cpp.__file__), "lib", "llama.dll"))')
+          export VAD_MODEL=$(poetry run python -c 'import os, pysilero_vad; print(os.path.join(os.path.dirname(pysilero_vad.__file__), "models", "silero_vad.onnx"))')
+          echo "ONNXRUNTIME_DLL=$ONNXRUNTIME_DLL" >> $GITHUB_ENV
+          echo "LLAMACPP_DLL=$LLAMACPP_DLL" >> $GITHUB_ENV
+          echo "VAD_MODEL=$VAD_MODEL" >> $GITHUB_ENV
 
       - name: Debug environment variables
         run: |
@@ -64,7 +64,7 @@ jobs:
         id: get_commit
         run: |
           $COMMIT_ID = git rev-parse HEAD
-          echo "COMMIT_ID=$COMMIT_ID" >> $env:GITHUB_ENV
+          echo "COMMIT_ID=$COMMIT_ID" >> $GITHUB_ENV
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -86,7 +86,7 @@ jobs:
         run: |
           pip install --upgrade pip setuptools
           pip uninstall -y llama-cpp-python
-          $Env:CMAKE_ARGS = "-DGGML_VULKAN=on"
+          export CMAKE_ARGS = "-DGGML_VULKAN=on"
           pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90
 
       - name: Create Executable for AIServer with llamacpp[vulkan]
