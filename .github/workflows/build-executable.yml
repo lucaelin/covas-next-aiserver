@@ -36,6 +36,7 @@ jobs:
 
       - name: Install llamacpp with OpenBLAS support
         run: |
+          source $VENV
           pip install --upgrade pip setuptools
           pip uninstall -y llama-cpp-python
           export CMAKE_ARGS="-DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS"
@@ -44,6 +45,7 @@ jobs:
       - name: Determine paths for dependencies
         id: determine_paths
         run: |
+          source $VENV
           export ONNXRUNTIME_DLL=$(poetry run python -c 'import os, onnxruntime; print(os.path.join(os.path.dirname(onnxruntime.__file__), "capi", "onnxruntime_providers_shared.dll"))')
           export LLAMACPP_DLL=$(poetry run python -c 'import os, llama_cpp; print(os.path.join(os.path.dirname(llama_cpp.__file__), "lib", "llama.dll"))')
           export VAD_MODEL=$(poetry run python -c 'import os, pysilero_vad; print(os.path.join(os.path.dirname(pysilero_vad.__file__), "models", "silero_vad.onnx"))')
@@ -59,7 +61,8 @@ jobs:
 
       - name: Create Executable for AIServer
         run: |
-          pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
+          source $VENV
+          poetry run pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
 
       - name: Get current commit ID
         id: get_commit
@@ -85,6 +88,7 @@ jobs:
 
       - name: Install llamacpp with Vulkan support
         run: |
+          source $VENV
           pip install --upgrade pip setuptools
           pip uninstall -y llama-cpp-python
           export CMAKE_ARGS = "-DGGML_VULKAN=on"
@@ -92,7 +96,8 @@ jobs:
 
       - name: Create Executable for AIServer with llamacpp[vulkan]
         run: |
-          pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
+          source $VENV
+          poetry run pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
