@@ -17,7 +17,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install .
+          pip install . --no-binary=covas-next-aiserver --no-binary=llama-cpp-python
 
       - name: Install pyinstaller
         run: |
