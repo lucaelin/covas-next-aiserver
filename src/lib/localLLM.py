@@ -149,7 +149,14 @@ def llm(model: Llama, prompt):
     messages = []
     for message in prompt.get("messages"):
         if messages and messages[-1].get("role") == message.get("role"):
-            messages[-1]["content"] += " " + message.get("content")
+            if message.get("content"):
+                messages[-1]["content"] = (
+                    messages[-1].get("content", "") + " " + message.get("content", "")
+                )
+            if message.get("tool_calls"):
+                messages[-1]["tool_calls"] = messages[-1].get(
+                    "tool_calls", []
+                ) + message.get("tool_calls", [])
         else:
             messages.append(message)
 
