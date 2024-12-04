@@ -17,8 +17,6 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install pip-tools
-          pip-compile -o requirements.txt pyproject.toml
           pip install -r requirements.txt
 
       - name: Install pyinstaller
