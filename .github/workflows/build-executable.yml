@@ -17,7 +17,9 @@ jobs:
 
       - name: Install dependencies
         run: |
-          pip install . --no-binary=covas-next-aiserver --no-binary=llama-cpp-python
+          pip install pip-tools
+          pip-compile -o requirements.txt pyproject.toml
+          pip install -r requirements.txt
 
       - name: Install pyinstaller
         run: |
