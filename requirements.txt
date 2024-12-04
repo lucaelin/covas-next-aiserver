@@ -141,7 +141,7 @@ jmespath==1.0.1
     #   botocore
 kthread==0.2.3
     # via covas-next-aiserver (pyproject.toml)
-llama-cpp-python==0.2.90
+#llama-cpp-python==0.2.90
     # via covas-next-aiserver (pyproject.toml)
 markdown-it-py==3.0.0
     # via rich
