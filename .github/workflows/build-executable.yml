@@ -25,6 +25,7 @@ jobs:
       - name: Install numpy
         run: |
           & ((poetry env info --path) + "\Scripts\activate.ps1")
+          pip uninstall -y numpy
           pip install --force-reinstall --ignore-installed numpy==1.25.2
 
       - name: Install pyinstaller
