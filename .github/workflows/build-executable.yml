@@ -25,23 +25,23 @@ jobs:
       - name: Install numpy
         run: |
           & ((poetry env info --path) + "\Scripts\activate.ps1")
-          python debug.py
-          pip uninstall -y numpy
-          pip install --force-reinstall --ignore-installed numpy==1.25.2
+          poetry run python debug.py
+          poetry run pip uninstall -y numpy
+          poetry run pip install --force-reinstall --ignore-installed numpy==1.25.2
 
       - name: Install pyinstaller
         run: |
           & ((poetry env info --path) + "\Scripts\activate.ps1")
           $Env:PYINSTALLER_COMPILE_BOOTLOADER = "true"
-          pip install --force-reinstall --ignore-installed --no-binary :all: pyinstaller==6.10.0
+          poetry run pip install --force-reinstall --ignore-installed --no-binary :all: pyinstaller==6.10.0
 
       - name: Install llamacpp with OpenBLAS support
         run: |
           & ((poetry env info --path) + "\Scripts\activate.ps1")
-          pip install --upgrade pip setuptools
-          pip uninstall -y llama-cpp-python
+          poetry run pip install --upgrade pip setuptools
+          poetry run pip uninstall -y llama-cpp-python
           $Env:CMAKE_ARGS = "-DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS"
-          pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90
+          poetry run pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90
 
       - name: Determine paths for dependencies
         run: |
@@ -88,10 +88,10 @@ jobs:
       - name: Install llamacpp with Vulkan support
         run: |
           & ((poetry env info --path) + "\Scripts\activate.ps1")
-          pip install --upgrade pip setuptools
-          pip uninstall -y llama-cpp-python
+          poetry run pip install --upgrade pip setuptools
+          poetry run pip uninstall -y llama-cpp-python
           $Env:CMAKE_ARGS = "-DGGML_VULKAN=on"
-          pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90
+          poetry run pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90
 
       - name: Create Executable for AIServer with llamacpp[vulkan]
         run: |
