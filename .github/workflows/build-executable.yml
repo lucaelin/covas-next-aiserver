@@ -27,7 +27,6 @@ jobs:
 
       - name: Install pyinstaller
         run: |
-          source $VENV
           export PYINSTALLER_COMPILE_BOOTLOADER="true"
           poetry run pip install --force-reinstall --ignore-installed --no-binary :all: pyinstaller==6.10.0
 
