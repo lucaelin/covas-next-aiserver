@@ -98,6 +98,25 @@ def create_chat_completion_handler(
             special=True,
         )
         print("prompt_tokens:", len(prompt_tokens))
+
+        # if the prompt is longer than the model context length, cut tokens in the middle
+        prompt_tokens_safety = max_tokens if max_tokens else llama.n_ctx() // 4
+        if len(prompt_tokens) > llama.n_ctx() - prompt_tokens_safety:
+            original_length = len(prompt_tokens)
+            beginning = prompt_tokens[: llama.n_ctx() - prompt_tokens_safety // 2]
+            end = prompt_tokens[-llama.n_ctx() + prompt_tokens_safety // 2 :]
+            prompt_tokens = beginning + end
+            print(
+                "truncating prompt by # tokens:", original_length - len(prompt_tokens)
+            )
+
+        max_tokens = (
+            max_tokens
+            if max_tokens is not None
+            else (llama.n_ctx() - len(prompt_tokens))
+        )
+        print("max_tokens:", max_tokens)
+
         if result.stop is not None:
             stop = [] if stop is None else [stop] if isinstance(stop, str) else stop
             rstop = result.stop if isinstance(result.stop, list) else [result.stop]
@@ -172,8 +191,6 @@ def create_chat_completion_handler(
             llama.tokenize(token.encode("utf-8"), False, True)[0] for token in stop
         ]
         stop_reason = None
-        max_tokens = max_tokens if max_tokens is not None else llama.n_ctx()
-        print("max_tokens:", max_tokens)
         for token in token_gen:
             print(llama.detokenize([token], generated_tokens).decode("utf-8"), end="")
             sys.stdout.flush()
