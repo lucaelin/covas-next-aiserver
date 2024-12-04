@@ -31,7 +31,7 @@ jobs:
           pip install --upgrade pip setuptools
           pip uninstall -y llama-cpp-python
           $Env:CMAKE_ARGS = "-DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS"
-          pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90
+          pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90 numpy==1.25.2
 
       - name: Determine paths for dependencies
         run: |
@@ -78,7 +78,7 @@ jobs:
           pip install --upgrade pip setuptools
           pip uninstall -y llama-cpp-python
           $Env:CMAKE_ARGS = "-DGGML_VULKAN=on"
-          pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90
+          pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90 numpy==1.25.2
 
       - name: Create Executable for AIServer with llamacpp[vulkan]
         run: |
