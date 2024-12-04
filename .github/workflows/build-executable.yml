@@ -29,20 +29,18 @@ jobs:
         run: |
           source $VENV
           export PYINSTALLER_COMPILE_BOOTLOADER="true"
-          pip install --force-reinstall --ignore-installed --no-binary :all: pyinstaller==6.10.0
+          poetry run pip install --force-reinstall --ignore-installed --no-binary :all: pyinstaller==6.10.0
 
       - name: Install llamacpp with OpenBLAS support
         run: |
-          source $VENV
-          pip install --upgrade pip setuptools
-          pip uninstall -y llama-cpp-python
+          poetry run pip install --upgrade pip setuptools
+          poetry run pip uninstall -y llama-cpp-python
           export CMAKE_ARGS="-DGGML_BLAS=ON -DGGML_BLAS_VENDOR=OpenBLAS"
-          pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90
+          poetry run pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90
 
       - name: Determine paths for dependencies
         id: determine_paths
         run: |
-          source $VENV
           export ONNXRUNTIME_DLL=$(poetry run python -c 'import os, onnxruntime; print(os.path.join(os.path.dirname(onnxruntime.__file__), "capi", "onnxruntime_providers_shared.dll"))')
           export LLAMACPP_DLL=$(poetry run python -c 'import os, llama_cpp; print(os.path.join(os.path.dirname(llama_cpp.__file__), "lib", "llama.dll"))')
           export VAD_MODEL=$(poetry run python -c 'import os, pysilero_vad; print(os.path.join(os.path.dirname(pysilero_vad.__file__), "models", "silero_vad.onnx"))')
@@ -58,7 +56,6 @@ jobs:
 
       - name: Create Executable for AIServer
         run: |
-          source $VENV
           poetry run pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
 
       - name: Get current commit ID
@@ -85,15 +82,13 @@ jobs:
 
       - name: Install llamacpp with Vulkan support
         run: |
-          source $VENV
-          pip install --upgrade pip setuptools
-          pip uninstall -y llama-cpp-python
+          poetry run pip install --upgrade pip setuptools
+          poetry run pip uninstall -y llama-cpp-python
           export CMAKE_ARGS = "-DGGML_VULKAN=on"
-          pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90
+          poetry run pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.2.90
 
       - name: Create Executable for AIServer with llamacpp[vulkan]
         run: |
-          source $VENV
           poetry run pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
 
       - name: Upload build artifact
