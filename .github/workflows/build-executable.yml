@@ -60,7 +60,7 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AIServer_v${{ env.COMMIT_ID }}
+          name: AIServer_v${{ steps.get_commit.outputs.COMMIT_ID }}
           path: ./dist
           compression-level: 0 # no compression
 
@@ -87,6 +87,6 @@ jobs:
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
-          name: AIServer_v${{ env.COMMIT_ID }}-vulkan
+          name: AIServer_v${{ steps.get_commit.outputs.COMMIT_ID }}-vulkan
           path: ./dist
           compression-level: 0 # no compression
