@@ -38,21 +38,18 @@ jobs:
 
       - name: Determine paths for dependencies
         run: |
+          & ((poetry env info --path) + "\Scripts\activate.ps1")
           $ONNXRUNTIME_DLL = python -c 'import os, onnxruntime; print(os.path.join(os.path.dirname(onnxruntime.__file__), "capi", "onnxruntime_providers_shared.dll"))'
           $LLAMACPP_DLL = python -c 'import os, llama_cpp; print(os.path.join(os.path.dirname(llama_cpp.__file__), "lib", "llama.dll"))'
-          $VAD_MODEL = python -c 'import os, pysilero_vad; print(os.path.join(os.path.dirname(pysilero_vad.__file__), "models", "silero_vad.onnx"))'
           echo "ONNXRUNTIME_DLL=$ONNXRUNTIME_DLL" >> $env:GITHUB_ENV
           echo "LLAMACPP_DLL=$LLAMACPP_DLL" >> $env:GITHUB_ENV
-          echo "VAD_MODEL=$VAD_MODEL" >> $env:GITHUB_ENV
           python -c 'import onnxruntime; print("onnxruntime path:", onnxruntime.__file__)'
           python -c 'import llama_cpp; print("llama_cpp path:", llama_cpp.__file__)'
-          python -c 'import pysilero_vad; print("pysilero_vad path:", pysilero_vad.__file__)'
 
       - name: Debug environment variables
         run: |
           echo "ONNXRUNTIME_DLL=${{ env.ONNXRUNTIME_DLL }}"
           echo "LLAMACPP_DLL=${{ env.LLAMACPP_DLL }}"
-          echo "VAD_MODEL=${{ env.VAD_MODEL }}"
 
       - name: Create Executable for AIServer
         run: |
