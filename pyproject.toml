@@ -35,6 +35,7 @@ soundfile = "0.12.1"
 speechrecognition = "3.10.4"
 sherpa-onnx = "1.10.29"
 cached-path = "^1.6.4"
+numpy = "1.25.2"
 
 
 [build-system]
