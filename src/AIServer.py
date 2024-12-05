@@ -86,6 +86,7 @@ app = Flask(__name__)
 
 
 @app.route("/v1/chat/completions", methods=["POST"])
+@app.route("/chat/completions", methods=["POST"])
 def createChatCompletion():
     chat = request.json
     if not llm_model:
@@ -100,6 +101,7 @@ def createChatCompletion():
 
 
 @app.route("/v1/audio/speech", methods=["POST"])
+@app.route("/audio/speech", methods=["POST"])
 def createSpeech():
     data = request.json
 
@@ -138,6 +140,7 @@ def createSpeech():
 
 
 @app.route("/v1/audio/transcriptions", methods=["POST"])
+@app.route("/audio/transcriptions", methods=["POST"])
 def createTranscription():
     # decode form data
     data = request.form

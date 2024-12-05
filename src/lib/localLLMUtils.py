@@ -84,31 +84,33 @@ def create_chat_completion_handler(
             ),
         )
 
-        result = chat_formatter(
-            messages=messages,
-            functions=functions,
-            function_call=function_call,
-            tools=tools,
-            tool_choice=tool_choice,
-        )
-
-        prompt_tokens = llama.tokenize(
-            result.prompt.encode("utf-8"),
-            add_bos=not result.added_special,
-            special=True,
-        )
-        print("prompt_tokens:", len(prompt_tokens))
-
-        # if the prompt is longer than the model context length, cut tokens in the middle
-        prompt_tokens_safety = max_tokens if max_tokens else llama.n_ctx() // 4
-        if len(prompt_tokens) > llama.n_ctx() - prompt_tokens_safety:
-            original_length = len(prompt_tokens)
-            beginning = prompt_tokens[: llama.n_ctx() - prompt_tokens_safety // 2]
-            end = prompt_tokens[-llama.n_ctx() + prompt_tokens_safety // 2 :]
-            prompt_tokens = beginning + end
-            print(
-                "truncating prompt by # tokens:", original_length - len(prompt_tokens)
+        original_message_count = len(messages)
+        while True:
+            result = chat_formatter(
+                messages=messages,
+                functions=functions,
+                function_call=function_call,
+                tools=tools,
+                tool_choice=tool_choice,
             )
+
+            prompt_tokens = llama.tokenize(
+                result.prompt.encode("utf-8"),
+                add_bos=not result.added_special,
+                special=True,
+            )
+            print("prompt_tokens:", len(prompt_tokens))
+
+            # if the prompt is longer than the model context length, cut messages in the middle
+            prompt_tokens_safety = max_tokens if max_tokens else llama.n_ctx() // 4
+            if len(prompt_tokens) > llama.n_ctx() - prompt_tokens_safety:
+                messages = (
+                    messages[: len(messages) // 2 - 1] + messages[len(messages) // 2 :]
+                )
+            else:
+                break
+        if len(messages) < original_message_count:
+            print("cut messages by:", original_message_count - len(messages))
 
         max_tokens = (
             max_tokens

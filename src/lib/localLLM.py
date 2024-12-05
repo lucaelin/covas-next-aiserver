@@ -44,6 +44,16 @@ model_presets = {
         "tool_use_regex": "^<tool_call>((.|\\n)*)</tool_call>",
         "max_context": 8192,
     },
+    "lmstudio-community/SmolLM2-360M-Instruct-GGUF": {
+        "filename": "SmolLM2-360M-Instruct-Q8_0.gguf",
+        "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if 'tool_calls' in message %}{% set text = '<tool_call>' + message['tool_calls'][0]['function']|tojson + '</tool_call>' %}{% endif %}{% if 'content' in message %}{% set text = message['content'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\n\nYou have access to the following tools:\n<tools>\n' + tools|tojson + '\n</tools>' %}{% endif %}{% set content = '<|im_start|>' + role + '\n'+ text | trim + '<|im_end|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|im_start|>assistant\n' }}",
+        "tool_use_grammar": lambda tools: f"""
+            root   ::= ("<tool_call>[\\n" {gbnf_or([gbnf_sanitize(tool["function"]["name"])+' ' for tool in tools])} "\\n]</tool_call>") | (nottoolcalls .*)
+            nottoolcalls ::= {gbnf_not("<tool_call>")}
+        """,
+        "tool_use_regex": "^<tool_call>((.|\\n)*)</tool_call>",
+        "max_context": 8192,
+    },
     "lmstudio-community/Llama-3.2-3B-Instruct-GGUF": {
         "filename": "Llama-3.2-3B-Instruct-Q8_0.gguf",
         "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if role == 'tool' %}{% set role = 'ipython' %}{% endif %}{% set text = message['content'] %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\nHere is a list of functions in JSON format that you can invoke:\n' + tools|tojson + '\nShould you decide to return the function call, must put it at the beginning of your response, without any additional text and in the following format: [func_name({\"params_name1\":\"params_value1\", \"params_name2\"=\"params_value2\"})]. You may also choose not to call any function, if no function matches the users request.' %}{% endif %}{% set content = '<|start_header_id|>' + role + '<|end_header_id|>\n\n'+ text | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}",
