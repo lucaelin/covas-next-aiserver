@@ -206,7 +206,7 @@ def create_chat_completion_handler(
 
         print()
         completion = llama._model.detokenize(generated_tokens, special=True).decode(
-            "utf-8"
+            "utf-8", errors="ignore"
         )
 
         if llama.cache:

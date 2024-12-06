@@ -5,22 +5,6 @@ from llama_cpp import Llama
 from .localLLMGrammarUtils import gbnf_literal, gbnf_not, gbnf_or, gbnf_sanitize
 from .localLLMUtils import create_chat_completion_handler, LlamaDiskCache
 
-llm_model_names = [
-    "None",
-    "lucaelin/llama-3.2-3b-instruct-fc-gguf",
-    "lmstudio-community/SmolLM2-1.7B-Instruct-GGUF",
-    "lmstudio-community/Llama-3.2-3B-Instruct-GGUF",
-    "lmstudio-community/Mistral-7B-Instruct-v0.3-GGUF",
-    "lmstudio-community/Meta-Llama-3.1-8B-Instruct-GGUF",
-    "lmstudio-community/Mistral-Nemo-Instruct-2407-GGUF",
-    "allenai/OLMoE-1B-7B-0924-Instruct-GGUF",
-    "Salesforce/xLAM-1b-fc-r-gguf",
-    "bartowski/functionary-small-v3.1-GGUF",
-    # "NousResearch/Llama-3.2-1B",
-    # "bartowski/Phi-3.5-mini-instruct-GGUF",
-    # "phi0112358/DeepSeek-V2-Lite-Chat-Q4_0-GGUF",
-    # "tiiuae/falcon-mamba-7b-instruct-Q4_K_M-GGUF",
-]
 import jinja2
 
 jinja2.filters.FILTERS["fromjson"] = lambda s: json.loads(s)
@@ -165,6 +149,9 @@ model_presets = {
         ],
     },
 }
+
+
+llm_model_names = ["None"] + list(model_presets.keys())
 
 
 def init_llm(model_path: str, use_disk_cache: bool = False) -> Optional[Llama]:
