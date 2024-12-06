@@ -225,7 +225,7 @@ def create_chat_completion_handler(
         tool_calls = None
         content = None
         # check if the completion contains tool calls using regex
-        if re.search(tool_use_regex, completion):
+        if tools and tool_choice != "none" and re.search(tool_use_regex, completion):
             match = re.search(tool_use_regex, completion)
             functions = tool_use_parser(match)
             print("extracted functions:", functions)
