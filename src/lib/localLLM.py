@@ -10,51 +10,39 @@ import jinja2
 jinja2.filters.FILTERS["fromjson"] = lambda s: json.loads(s)
 jinja2.filters.FILTERS["from_json"] = lambda s: json.loads(s)
 
+llama_finetune_preset = {
+    "filename": "unsloth.Q8_0.gguf",
+    "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if 'tool_calls' in message %}{% set text = '<tool_call>' + {'name': message['tool_calls'][0]['function']['name'], 'arguments':message['tool_calls'][0]['function']['arguments']|from_json}|tojson + '</tool_call>' %}{% endif %}{% if 'content' in message %}{% set text = message['content'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\n\nYou are able to call the following tools, when needed, call them using the <tool_call> xml-tag, followed by name and arguments as json.\n<tools>\n' + tools|tojson + '\n</tools>' %}{% endif %}{% set content = '<|start_header_id|>' + role + '<|end_header_id|>\n\n'+ text | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}",
+    "tool_use_grammar": lambda tools: f"""
+        root   ::= ("<tool_call>" {gbnf_or([gbnf_sanitize(tool["function"]["name"]) for tool in tools])} "</tool_call>") | (nottoolcalls .*)
+        nottoolcalls ::= {gbnf_not("<tool_call>")}
+    """,
+    "tool_use_regex": "^<tool_call>(.*)</tool_call>",
+    "tool_use_parser": lambda regex: [json.loads(regex.group(1))],
+}
+
+smollm2_finetune_preset = {
+    "filename": "unsloth.Q8_0.gguf",
+    "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if 'tool_calls' in message %}{% set text = '<tool_call>' + message['tool_calls'][0]['function']|tojson + '</tool_call>' %}{% endif %}{% if 'content' in message %}{% set text = message['content'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\n\nYou have access to the following tools:\n<tools>\n' + tools|tojson + '\n</tools>' %}{% endif %}{% set content = '<|im_start|>' + role + '\n'+ text | trim + '<|im_end|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|im_start|>assistant\n' }}",
+    "tool_use_grammar": lambda tools: f"""
+        root   ::= ("<tool_call>[\\n" {gbnf_or([gbnf_sanitize(tool["function"]["name"])+' ' for tool in tools])} "\\n]</tool_call>") | (nottoolcalls .*)
+        nottoolcalls ::= {gbnf_not("<tool_call>")}
+    """,
+    "tool_use_regex": "^<tool_call>((.|\\n)*)</tool_call>",
+}
+
 model_presets = {
-    "lucaelin/llama-3.2-3b-instruct-fc-cn-gguf": {
-        "filename": "unsloth.Q8_0.gguf",
-        "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if 'tool_calls' in message %}{% set text = '<tool_call>' + {'name': message['tool_calls'][0]['function']['name'], 'arguments':message['tool_calls'][0]['function']['arguments']|from_json}|tojson + '</tool_call>' %}{% endif %}{% if 'content' in message %}{% set text = message['content'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\n\nYou are able to call the following tools, when needed, call them using the <tool_call> xml-tag, followed by name and arguments as json.\n<tools>\n' + tools|tojson + '\n</tools>' %}{% endif %}{% set content = '<|start_header_id|>' + role + '<|end_header_id|>\n\n'+ text | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}",
-        "tool_use_grammar": lambda tools: f"""
-            root   ::= ("<tool_call>" {gbnf_or([gbnf_sanitize(tool["function"]["name"]) for tool in tools])} "</tool_call>") | (nottoolcalls .*)
-            nottoolcalls ::= {gbnf_not("<tool_call>")}
-        """,
-        "tool_use_regex": "^<tool_call>(.*)</tool_call>",
-        "tool_use_parser": lambda regex: [json.loads(regex.group(1))],
-    },
-    "lucaelin/llama-3.2-1b-instruct-fc-cn-gguf": {
-        "filename": "unsloth.Q8_0.gguf",
-        "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if 'tool_calls' in message %}{% set text = '<tool_call>' + {'name': message['tool_calls'][0]['function']['name'], 'arguments':message['tool_calls'][0]['function']['arguments']|from_json}|tojson + '</tool_call>' %}{% endif %}{% if 'content' in message %}{% set text = message['content'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\n\nYou are able to call the following tools, when needed, call them using the <tool_call> xml-tag, followed by name and arguments as json.\n<tools>\n' + tools|tojson + '\n</tools>' %}{% endif %}{% set content = '<|start_header_id|>' + role + '<|end_header_id|>\n\n'+ text | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}",
-        "tool_use_grammar": lambda tools: f"""
-            root   ::= ("<tool_call>" {gbnf_or([gbnf_sanitize(tool["function"]["name"]) for tool in tools])} "</tool_call>") | (nottoolcalls .*)
-            nottoolcalls ::= {gbnf_not("<tool_call>")}
-        """,
-        "tool_use_regex": "^<tool_call>(.*)</tool_call>",
-        "tool_use_parser": lambda regex: [json.loads(regex.group(1))],
-    },
-    "lucaelin/SmolLM2-360M-Instruct-fc-cn-gguf": {
-        "filename": "unsloth.Q8_0.gguf",
-        "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if 'tool_calls' in message %}{% set text = '<tool_call>' + message['tool_calls'][0]['function']|tojson + '</tool_call>' %}{% endif %}{% if 'content' in message %}{% set text = message['content'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\n\nYou have access to the following tools:\n<tools>\n' + tools|tojson + '\n</tools>' %}{% endif %}{% set content = '<|im_start|>' + role + '\n'+ text | trim + '<|im_end|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|im_start|>assistant\n' }}",
-        "tool_use_grammar": lambda tools: f"""
-            root   ::= ("<tool_call>[\\n" {gbnf_or([gbnf_sanitize(tool["function"]["name"])+' ' for tool in tools])} "\\n]</tool_call>") | (nottoolcalls .*)
-            nottoolcalls ::= {gbnf_not("<tool_call>")}
-        """,
-        "tool_use_regex": "^<tool_call>((.|\\n)*)</tool_call>",
-        "max_context": 1024 * 16,
-        "rope_scaling_type": 1,
-        "rope_freq_scale": 2,
-    },
-    "lucaelin/SmolLM2-1.7B-Instruct-fc-cn-gguf": {
-        "filename": "unsloth.Q8_0.gguf",
-        "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if 'tool_calls' in message %}{% set text = '<tool_call>' + message['tool_calls'][0]['function']|tojson + '</tool_call>' %}{% endif %}{% if 'content' in message %}{% set text = message['content'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\n\nYou have access to the following tools:\n<tools>\n' + tools|tojson + '\n</tools>' %}{% endif %}{% set content = '<|im_start|>' + role + '\n'+ text | trim + '<|im_end|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|im_start|>assistant\n' }}",
-        "tool_use_grammar": lambda tools: f"""
-            root   ::= ("<tool_call>[\\n" {gbnf_or([gbnf_sanitize(tool["function"]["name"])+' ' for tool in tools])} "\\n]</tool_call>") | (nottoolcalls .*)
-            nottoolcalls ::= {gbnf_not("<tool_call>")}
-        """,
-        "tool_use_regex": "^<tool_call>((.|\\n)*)</tool_call>",
-        "max_context": 1024 * 16,
-        "rope_scaling_type": 1,
-        "rope_freq_scale": 2,
-    },
+    "lucaelin/llama-3.2-3b-instruct-fc-cn-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.2-3b-instruct-cn-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.2-3b-instruct-fc-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.2-1b-instruct-fc-cn-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.2-1b-instruct-cn-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.2-1b-instruct-fc-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.1-8b-instruct-fc-cn-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.1-8b-instruct-cn-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.1-8b-instruct-fc-gguf": llama_finetune_preset,
+    "lucaelin/SmolLM2-360M-Instruct-fc-cn-gguf": smollm2_finetune_preset,
+    "lucaelin/SmolLM2-1.7B-Instruct-fc-cn-gguf": smollm2_finetune_preset,
     "lmstudio-community/SmolLM2-1.7B-Instruct-GGUF": {
         "filename": "SmolLM2-1.7B-Instruct-Q8_0.gguf",
         "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if 'tool_calls' in message %}{% set text = '<tool_call>' + message['tool_calls'][0]['function']|tojson + '</tool_call>' %}{% endif %}{% if 'content' in message %}{% set text = message['content'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\n\nYou have access to the following tools:\n<tools>\n' + tools|tojson + '\n</tools>' %}{% endif %}{% set content = '<|im_start|>' + role + '\n'+ text | trim + '<|im_end|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|im_start|>assistant\n' }}",
