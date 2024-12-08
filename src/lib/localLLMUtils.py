@@ -205,9 +205,15 @@ def create_chat_completion_handler(
         stop_tokens = [
             llama.tokenize(token.encode("utf-8"), False, True)[0] for token in stop
         ]
+        print("stop", stop, stop_tokens)
         stop_reason = None
         for token in token_gen:
-            print(llama.detokenize([token], generated_tokens).decode("utf-8"), end="")
+            print(
+                llama.detokenize([token], generated_tokens, special=True).decode(
+                    "utf-8"
+                ),
+                end="",
+            )
             sys.stdout.flush()
             if token in stop_tokens:
                 stop_reason = "stop"
