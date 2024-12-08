@@ -106,7 +106,7 @@ def create_chat_completion_handler(
 
             prompt_tokens = llama.tokenize(
                 result.encode("utf-8"),
-                add_bos=True,
+                add_bos=False,
                 special=True,
             )
             print("prompt_tokens:", len(prompt_tokens))
@@ -131,11 +131,8 @@ def create_chat_completion_handler(
 
         print(result)
 
-        stop = (
-            [eos_token_set]
-            if stop is None
-            else [stop, eos_token_set] if isinstance(stop, str) else stop
-        )
+        stop = [] if stop is None else ([stop] if isinstance(stop, str) else stop)
+        stop += [eos_token_set]
 
         if response_format is not None and response_format["type"] == "json_object":
             grammar = llama_grammar.LlamaGrammar.from_string(
