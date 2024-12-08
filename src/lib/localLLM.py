@@ -32,15 +32,16 @@ smollm2_finetune_preset = {
 }
 
 model_presets = {
-    "lucaelin/llama-3.2-3b-instruct-fc-cn-gguf": llama_finetune_preset,
-    "lucaelin/llama-3.2-3b-instruct-cn-gguf": llama_finetune_preset,
-    "lucaelin/llama-3.2-3b-instruct-fc-gguf": llama_finetune_preset,
-    "lucaelin/llama-3.2-1b-instruct-fc-cn-gguf": llama_finetune_preset,
-    "lucaelin/llama-3.2-1b-instruct-cn-gguf": llama_finetune_preset,
-    "lucaelin/llama-3.2-1b-instruct-fc-gguf": llama_finetune_preset,
-    "lucaelin/llama-3.1-8b-instruct-fc-cn-gguf": llama_finetune_preset,
-    "lucaelin/llama-3.1-8b-instruct-cn-gguf": llama_finetune_preset,
-    "lucaelin/llama-3.1-8b-instruct-fc-gguf": llama_finetune_preset,
+    "lmstudio-community/Llama-3.2-3B-Instruct-GGUF": {
+        **llama_finetune_preset,
+        "filename": "Llama-3.2-3B-Instruct-Q8_0.gguf",
+    },
+    "lmstudio-community/Llama-3.1-8B-Instruct-GGUF": {
+        **llama_finetune_preset,
+        "filename": "Llama-3.1-8B-Instruct-Q8_0.gguf",
+    },
+    "lucaelin/llama-3.2-3b-instruct-cn-v2-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.1-8b-instruct-cn-v2-gguf": llama_finetune_preset,
     "lucaelin/SmolLM2-360M-Instruct-fc-cn-gguf": smollm2_finetune_preset,
     "lucaelin/SmolLM2-1.7B-Instruct-fc-cn-gguf": smollm2_finetune_preset,
     "lmstudio-community/SmolLM2-1.7B-Instruct-GGUF": {
@@ -66,17 +67,6 @@ model_presets = {
         "max_context": 1024 * 16,
         "rope_scaling_type": 1,
         "rope_freq_scale": 2,
-    },
-    "lmstudio-community/Llama-3.2-3B-Instruct-GGUF": {
-        "filename": "Llama-3.2-3B-Instruct-Q8_0.gguf",
-        "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if role == 'tool' %}{% set role = 'ipython' %}{% endif %}{% set text = message['content'] %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\nHere is a list of functions in JSON format that you can invoke:\n' + tools|tojson + '\nShould you decide to return the function call, must put it at the beginning of your response, without any additional text and in the following format: [func_name({\"params_name1\":\"params_value1\", \"params_name2\"=\"params_value2\"})]. You may also choose not to call any function, if no function matches the users request.' %}{% endif %}{% set content = '<|start_header_id|>' + role + '<|end_header_id|>\n\n'+ text | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}",
-        "tool_use_grammar": lambda tools: f"""
-            root   ::= ("[" {gbnf_or([gbnf_literal(tool["function"]["name"])+'"("'+gbnf_sanitize(tool["function"]["name"])+'-arguments'+'")"' for tool in tools])} "]" )| ( [^\\[] .* )
-        """,
-        "tool_use_regex": "^\\[([a-zA-Z0-9_-]+)\\((.*)\\)\\]$",
-        "tool_use_parser": lambda regex: [
-            {"name": regex.groups()[0], "arguments": json.loads(regex.groups()[1])}
-        ],
     },
     "lmstudio-community/Mistral-7B-Instruct-v0.3-GGUF": {
         "filename": "Mistral-7B-Instruct-v0.3-IQ4_NL.gguf",
