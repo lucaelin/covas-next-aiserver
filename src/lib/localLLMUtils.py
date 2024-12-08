@@ -4,12 +4,15 @@ import sys
 import time
 from typing import Callable, Dict, Iterator, List, Optional, Sequence, Tuple, Union
 import diskcache
+import jinja2
+from jinja2.sandbox import ImmutableSandboxedEnvironment, SandboxedEnvironment
 from llama_cpp import BaseLlamaCache, Llama, LlamaDiskCache, LlamaRAMCache
 import llama_cpp as llama
 import llama_cpp
 from llama_cpp.llama_chat_format import Jinja2ChatFormatter
 import llama_cpp.llama_types as llama_types
 import llama_cpp.llama_grammar as llama_grammar
+import html
 
 from .localLLMGrammarUtils import functions_to_gbnf
 
@@ -18,11 +21,11 @@ def create_chat_completion_handler(
     template: str,
     tool_use_grammar: str,
     tool_use_regex: str,
-    tool_use_parser: Callable[
-        [re.Match], List[llama_types.ChatCompletionFunction]
-    ] = None,
-    bos_token: str = None,
-    eos_token: str = None,
+    tool_use_parser: (
+        Callable[[re.Match], List[llama_types.ChatCompletionFunction]] | None
+    ) = None,
+    bos_token: str | None = None,
+    eos_token: str | None = None,
     **kwargs,  # type: ignore
 ):
     if tool_use_parser is None:
@@ -66,37 +69,44 @@ def create_chat_completion_handler(
         llama_types.CreateChatCompletionResponse,
         Iterator[llama_types.CreateChatCompletionStreamResponse],
     ]:
-        chat_formatter = Jinja2ChatFormatter(
-            template=template,
-            eos_token=(
-                eos_token
-                if eos_token
-                else llama._model.detokenize([llama.token_eos()], special=True).decode(
-                    "utf-8"
-                )
-            ),
-            bos_token=(
-                bos_token
-                if bos_token
-                else llama._model.detokenize([llama.token_bos()], special=True).decode(
-                    "utf-8"
-                )
-            ),
+        print(template)
+        jinja_template = jinja2.Template(
+            template, autoescape=False, extensions=[], undefined=jinja2.StrictUndefined
+        )
+
+        bos_token_set = (
+            bos_token
+            if bos_token
+            else llama._model.detokenize([llama.token_bos()], special=True).decode(
+                "utf-8"
+            )
+        )
+        eos_token_set = (
+            eos_token
+            if eos_token
+            else llama._model.detokenize([llama.token_eos()], special=True).decode(
+                "utf-8"
+            )
         )
 
         original_message_count = len(messages)
         while True:
-            result = chat_formatter(
+            result = jinja_template.render(
+                add_generation_prompt=True,
                 messages=messages,
                 functions=functions,
                 function_call=function_call,
                 tools=tools,
                 tool_choice=tool_choice,
+                eos_token=eos_token_set,
+                bos_token=bos_token_set,
             )
+            # TODO why does jinja2 seem to escape "some" html entities?
+            result = html.unescape(result)
 
             prompt_tokens = llama.tokenize(
-                result.prompt.encode("utf-8"),
-                add_bos=not result.added_special,
+                result.encode("utf-8"),
+                add_bos=True,
                 special=True,
             )
             print("prompt_tokens:", len(prompt_tokens))
@@ -119,10 +129,13 @@ def create_chat_completion_handler(
         )
         print("max_tokens:", max_tokens)
 
-        if result.stop is not None:
-            stop = [] if stop is None else [stop] if isinstance(stop, str) else stop
-            rstop = result.stop if isinstance(result.stop, list) else [result.stop]
-            stop = stop + rstop
+        print(result)
+
+        stop = (
+            [eos_token_set]
+            if stop is None
+            else [stop, eos_token_set] if isinstance(stop, str) else stop
+        )
 
         if response_format is not None and response_format["type"] == "json_object":
             grammar = llama_grammar.LlamaGrammar.from_string(
