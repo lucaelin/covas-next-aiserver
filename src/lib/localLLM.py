@@ -40,11 +40,11 @@ model_presets = {
         **llama_finetune_preset,
         "filename": "Llama-3.2-3B-Instruct-Q8_0.gguf",
     },
-    "lucaelin/llama-3.2-1b-instruct-cn-v2-gguf": llama_finetune_preset,
     "lmstudio-community/Llama-3.1-8B-Instruct-GGUF": {
         **llama_finetune_preset,
         "filename": "Llama-3.1-8B-Instruct-Q8_0.gguf",
     },
+    "lucaelin/llama-3.2-1b-instruct-cn-v2-gguf": llama_finetune_preset,
     "lucaelin/llama-3.2-3b-instruct-cn-v2-gguf": llama_finetune_preset,
     "lucaelin/llama-3.1-8b-instruct-cn-v2-gguf": llama_finetune_preset,
     "lucaelin/SmolLM2-360M-Instruct-fc-cn-gguf": smollm2_finetune_preset,
@@ -166,20 +166,22 @@ def init_llm(model_path: str, use_disk_cache: bool = False) -> Optional[Llama]:
 
 def llm(model: Llama, prompt):
 
-    # deduplicate messages with consecutive roles
-    messages = []
-    for message in prompt.get("messages"):
-        if messages and messages[-1].get("role") == message.get("role"):
-            if message.get("content"):
-                messages[-1]["content"] = (
-                    messages[-1].get("content", "") + " " + message.get("content", "")
-                )
-            if message.get("tool_calls"):
-                messages[-1]["tool_calls"] = messages[-1].get(
-                    "tool_calls", []
-                ) + message.get("tool_calls", [])
-        else:
-            messages.append(message)
+    messages = prompt.get("messages")
+
+    # deduplicate messages with consecutive roles, this is required for some models, but not finetuned ones
+    # messages = []
+    # for message in prompt.get("messages"):
+    #    if messages and messages[-1].get("role") == message.get("role"):
+    #        if message.get("content"):
+    #            messages[-1]["content"] = (
+    #                messages[-1].get("content", "") + " " + message.get("content", "")
+    #            )
+    #        if message.get("tool_calls"):
+    #            messages[-1]["tool_calls"] = messages[-1].get(
+    #                "tool_calls", []
+    #            ) + message.get("tool_calls", [])
+    #    else:
+    #        messages.append(message)
 
     completion = model.create_chat_completion(
         messages=messages,
@@ -194,7 +196,7 @@ def llm(model: Llama, prompt):
 
 
 if __name__ == "__main__":
-    llm_model = init_llm("bartowski/functionary-small-v3.1-GGUF")
+    llm_model = init_llm("lucaelin/llama-3.2-3b-instruct-fc-cn-gguf")
 
     tools = [
         {
@@ -827,16 +829,179 @@ if __name__ == "__main__":
                 "messages": [
                     {
                         "role": "system",
-                        "content": "Let's roleplay in the universe of Elite: Dangerous. I will provide game events in parentheses; do not create new ones. Do not hallucinate any information that is not given to you. Do not use markdown in your responses. I am Commander Rude, an independent pilot and secret member of the Dark Wheel. \n\nYou are COVAS:NEXT, the onboard AI of my starship. You possess extensive knowledge and can provide detailed and accurate information on a wide range of topics, including galactic navigation, ship status, the current system, and more. \n\nDo not inform about my ship status and my location unless it's relevant or requested by me. Answer within 3 sentences. Acknowledge given orders. \n\nGuide and support me with witty, intelligent and sarcastic commentary. Provide clear mission briefings and humorous observations.",
+                        "content": "Let's roleplay in the universe of Elite: Dangerous. I will provide game events in parentheses; do not create new ones. Do not hallucinate any information that is not given to you. Do not use markdown in your responses. I am Commander Rude, an independent pilot and secret member of the Dark Wheel. \n\nYou are COVAS:NEXT, the onboard AI of my starship. You will be addressed as 'Computer'. \nYou possess extensive knowledge and can provide detailed and accurate information on a wide range of topics, including galactic navigation, ship status, the current system, and more. \n\nReply within one sentence, acknowledge orders, mention ship status/location only if relevant or asked, and don't end with a question. \n\nGuide and support me with witty commentary and humorous observations.",
                     },
                     {
                         "role": "user",
-                        "content": '(Ship status: {"star_class": null, "body": null, "ship_type": null, "location": null, "target": null, "jumps_remains": 0, "dist_jumped": 0, "cargo_capacity": 0, "status": {"Shields Up": true, "In MainShip": true}, "time": "3310-10-19T14:20:18.667106", "legalState": "Clean", "balance": 58541564, "pips": {"system": 1.0, "engine": 2.5, "weapons": 2.5}, "cargo": 0.0})',
+                        "content": '(Current status: {"status": ["LandingGearDown", "ShieldsUp", "FsdMassLocked", "InMainShip"], "balance": 74921539, "pips": {"system": 3.0, "engine": 3.0, "weapons": 0.0}, "cargo": 0.0, "player_time": "2024-12-01T00:16:42.035752", "elite_time": "3310-12-01T00:16:42.035752"})',
                     },
                     {
                         "role": "user",
-                        "content": "Hey, can you find a station that sells gold?",
+                        "content": '(Current ship: {"Name": "european swallow", "Type": "empire_courier", "ShipIdent": "swllw", "UnladenMass": 85.800644, "Cargo": 0, "CargoCapacity": 8, "FuelMain": 8.0, "FuelMainCapacity": 8.0, "FuelReservoir": 0.394726, "FuelReservoirCapacity": 0.41, "MaximumJumpRange": 31.102022, "LandingPadSize": "S"})',
                     },
+                    {
+                        "role": "user",
+                        "content": '(Current location: {"StarSystem": "Betel", "Planet": "Kava", "Station": "Stronghold Carrier"})',
+                    },
+                    {
+                        "role": "user",
+                        "content": "(Stations in current system: [{'name': 'Poteidaia', 'type': 'Coriolis Starport', 'orbit': 462, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'Agriculture', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': ['market', 'shipyard', 'outfitting'], 'body': 'Kava'}, {'name': 'Stronghold Carrier', 'type': 'Planetary Outpost', 'orbit': 462, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'High Tech', 'secondEconomy': None, 'controllingFaction': 'Li Yong-Rui', 'services': ['market', 'shipyard', 'outfitting'], 'body': 'Kava'}, {'name': 'Amphipolis', 'type': 'Coriolis Starport', 'orbit': 462.539346, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'Agriculture', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': ['market', 'shipyard', 'outfitting']}, {'name': 'Lockett Analytics Institution', 'type': 'Odyssey Settlement', 'orbit': 2118.172372, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'High Tech', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': []}, {'name': 'Pozandr Agricultural Centre', 'type': 'Odyssey Settlement', 'orbit': 2129, 'allegiance': 'Independent', 'government': 'Democracy', 'economy': 'Agriculture', 'secondEconomy': None, 'controllingFaction': 'Flotta Stellare', 'services': ['market'], 'body': 'Betel 4 b'}, {'name': 'Gaspar de Lemos Orbital', 'type': 'Outpost', 'orbit': 47, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'Extraction', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': ['market'], 'body': 'Betel 2'}, {'name': 'Hennepin Barracks', 'type': 'Planetary Outpost', 'orbit': 2129, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'Military', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': ['market', 'shipyard', 'outfitting'], 'body': 'Betel 4 b'}, {'name': 'Baker Enterprise', 'type': 'Planetary Outpost', 'orbit': 2129, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'Colony', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': ['market', 'outfitting'], 'body': 'Betel 4 a'}, {'name': 'Bennett Analysis Complex', 'type': 'Odyssey Settlement', 'orbit': 2123, 'allegiance': 'Independent', 'government': 'Democracy', 'economy': 'High Tech', 'secondEconomy': None, 'controllingFaction': 'Flotta Stellare', 'services': ['market'], 'body': 'Betel 4 c'}, {'name': 'Karpenko Nutrition Enterprise', 'type': 'Odyssey Settlement', 'orbit': 2145.159633, 'allegiance': 'Independent', 'government': 'Democracy', 'economy': 'Agriculture', 'secondEconomy': None, 'controllingFaction': 'Flotta Stellare', 'services': []}, {'name': 'Mogyla Biochemical Lab', 'type': 'Odyssey Settlement', 'orbit': 3133.761293, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'High Tech', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': []}, {'name': 'Castillo Synthetics Assembly', 'type': 'Odyssey Settlement', 'orbit': 3133, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'Industrial', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': ['market'], 'body': 'Betel 6 f'}, {'name': 'Bukenya Chemical Facility', 'type': 'Odyssey Settlement', 'orbit': 3140, 'allegiance': 'Federation', 'government': 'Corporate', 'economy': 'Industrial', 'secondEconomy': None, 'controllingFaction': 'Waruts Holdings', 'services': ['market'], 'body': 'Betel 6 g'}, {'name': 'Hammond Analytics Installation', 'type': 'Odyssey Settlement', 'orbit': 3141, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'High Tech', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': ['market'], 'body': 'Betel 6 d'}, {'name': 'Zelenko Industrial Base', 'type': 'Odyssey Settlement', 'orbit': 3143, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'Industrial', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': ['market'], 'body': 'Betel 6 e'}, {'name': 'Awolowo Horticultural', 'type': 'Odyssey Settlement', 'orbit': 3140, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'Agriculture', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': ['market'], 'body': 'Betel 6 a'}, {'name': 'Kook Hydroponics Collection', 'type': 'Odyssey Settlement', 'orbit': 3141, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'Agriculture', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': ['market'], 'body': 'Betel 6 d'}, {'name': 'Crellin-Davies Analytics Installation', 'type': 'Odyssey Settlement', 'orbit': 3143, 'allegiance': 'Independent', 'government': 'Democracy', 'economy': 'High Tech', 'secondEconomy': None, 'controllingFaction': 'Flotta Stellare', 'services': ['market'], 'body': 'Betel 6 e'}, {'name': 'Collinson Botanical Facility', 'type': 'Odyssey Settlement', 'orbit': 3145.932239, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'Agriculture', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': []}, {'name': 'Sakurai Chemical Silo', 'type': 'Odyssey Settlement', 'orbit': 3123, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'Industrial', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': ['market'], 'body': 'Betel 6 i'}, {'name': 'Yeo Laboratory', 'type': 'Odyssey Settlement', 'orbit': 3114, 'allegiance': 'Independent', 'government': 'Corporate', 'economy': 'High Tech', 'secondEconomy': None, 'controllingFaction': 'Omega Merchant Command', 'services': ['market'], 'body': 'Betel 6 h'}, {'name': 'Pyeon Chemical Base', 'type': 'Odyssey Settlement', 'orbit': 3123, 'allegiance': 'Federation', 'government': 'Corporate', 'economy': 'Industrial', 'secondEconomy': None, 'controllingFaction': 'Silver Creative Network', 'services': ['market'], 'body': 'Betel 6 i'}])",
+                    },
+                    {
+                        "role": "user",
+                        "content": '(Current system: {"name":"Betel","information":{"allegiance":"Independent","government":"Corporate","faction":"Omega Merchant Command","factionState":"Expansion","population":396317,"security":"Low","economy":"Agriculture","secondEconomy":"Extraction","reserve":"Depleted"},"primaryStar":{"type":"G (White-Yellow) Star","name":"Betel","isScoopable":true}})',
+                    },
+                    {"role": "user", "content": '(Current missions: {"Active": []})'},
+                    {
+                        "role": "user",
+                        "content": "That sucks. They don't sell the parts here that I want to look for, because I want to get into mining.",
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Looks like it's time to chart a new course; let's find a system that'll serve up those shiny mining modules with style.",
+                    },
+                    {
+                        "role": "user",
+                        "content": "Can you look for the closest station that is selling Collector Limpets Class 1, Prospector Limpet Class 1 and a Refinery Class 2 with a rating of A?",
+                    },
+                    {
+                        "role": "assistant",
+                        "content": None,
+                        "tool_calls": [
+                            {
+                                "id": "call_bwkdHguof3wFdeB2IyUMAzBH",
+                                "function": {
+                                    "arguments": '{"reference_system":"Betel","has_large_pad":false,"modules":[{"name":"Collector Limpet Controller","class":["1"]},{"name":"Prospector Limpet Controller","class":["1"]},{"name":"Refinery","class":["2"],"rating":["A"]}]}',
+                                    "name": "station_finder",
+                                },
+                                "type": "function",
+                            }
+                        ],
+                    },
+                    {
+                        "tool_call_id": "call_bwkdHguof3wFdeB2IyUMAzBH",
+                        "role": "tool",
+                        "name": "station_finder",
+                        "content": 'Here is a list of stations: {"amount_total": 9721, "amount_displayed": 3, "results": [{"name": "Stronghold Carrier", "system": "Betel", "distance": 0.0, "orbit": 462.452204, "has_large_pad": true, "is_planetary": true, "market": [], "modules": [{"name": "Collector Limpet Controller", "class": 1, "rating": "E", "price": 510}, {"name": "Collector Limpet Controller", "class": 1, "rating": "D", "price": 1020}, {"name": "Collector Limpet Controller", "class": 1, "rating": "C", "price": 2040}, {"name": "Collector Limpet Controller", "class": 1, "rating": "B", "price": 4080}, {"name": "Collector Limpet Controller", "class": 1, "rating": "A", "price": 8160}, {"name": "Collector Limpet Controller", "class": 3, "rating": "E", "price": 4590}, {"name": "Collector Limpet Controller", "class": 3, "rating": "D", "price": 9180}, {"name": "Collector Limpet Controller", "class": 3, "rating": "C", "price": 18360}, {"name": "Collector Limpet Controller", "class": 3, "rating": "B", "price": 36720}, {"name": "Collector Limpet Controller", "class": 3, "rating": "A", "price": 73440}, {"name": "Collector Limpet Controller", "class": 5, "rating": "E", "price": 41310}, {"name": "Collector Limpet Controller", "class": 5, "rating": "D", "price": 82620}, {"name": "Collector Limpet Controller", "class": 5, "rating": "C", "price": 165240}, {"name": "Collector Limpet Controller", "class": 5, "rating": "B", "price": 330480}, {"name": "Collector Limpet Controller", "class": 5, "rating": "A", "price": 660960}, {"name": "Collector Limpet Controller", "class": 7, "rating": "E", "price": 371790}, {"name": "Collector Limpet Controller", "class": 7, "rating": "D", "price": 743580}, {"name": "Collector Limpet Controller", "class": 7, "rating": "C", "price": 1487160}, {"name": "Collector Limpet Controller", "class": 7, "rating": "B", "price": 2974320}, {"name": "Collector Limpet Controller", "class": 7, "rating": "A", "price": 5948640}, {"name": "Prospector Limpet Controller", "class": 1, "rating": "E", "price": 510}, {"name": "Prospector Limpet Controller", "class": 1, "rating": "D", "price": 1020}, {"name": "Prospector Limpet Controller", "class": 1, "rating": "C", "price": 2040}, {"name": "Prospector Limpet Controller", "class": 1, "rating": "B", "price": 4080}, {"name": "Prospector Limpet Controller", "class": 1, "rating": "A", "price": 8160}, {"name": "Prospector Limpet Controller", "class": 3, "rating": "E", "price": 4590}, {"name": "Prospector Limpet Controller", "class": 3, "rating": "D", "price": 9180}, {"name": "Prospector Limpet Controller", "class": 3, "rating": "C", "price": 18360}, {"name": "Prospector Limpet Controller", "class": 3, "rating": "B", "price": 36720}, {"name": "Prospector Limpet Controller", "class": 3, "rating": "A", "price": 73440}, {"name": "Prospector Limpet Controller", "class": 5, "rating": "E", "price": 41310}, {"name": "Prospector Limpet Controller", "class": 5, "rating": "D", "price": 82620}, {"name": "Prospector Limpet Controller", "class": 5, "rating": "C", "price": 165240}, {"name": "Prospector Limpet Controller", "class": 5, "rating": "B", "price": 330480}, {"name": "Prospector Limpet Controller", "class": 5, "rating": "A", "price": 660960}, {"name": "Prospector Limpet Controller", "class": 7, "rating": "E", "price": 371790}, {"name": "Prospector Limpet Controller", "class": 7, "rating": "D", "price": 743580}, {"name": "Prospector Limpet Controller", "class": 7, "rating": "C", "price": 1487160}, {"name": "Prospector Limpet Controller", "class": 7, "rating": "B", "price": 2974320}, {"name": "Prospector Limpet Controller", "class": 7, "rating": "A", "price": 5948640}, {"name": "Refinery", "class": 1, "rating": "E", "price": 5100}, {"name": "Refinery", "class": 1, "rating": "D", "price": 15300}, {"name": "Refinery", "class": 1, "rating": "C", "price": 45900}, {"name": "Refinery", "class": 1, "rating": "B", "price": 137700}, {"name": "Refinery", "class": 1, "rating": "A", "price": 413100}, {"name": "Refinery", "class": 2, "rating": "E", "price": 10710}, {"name": "Refinery", "class": 2, "rating": "D", "price": 32130}, {"name": "Refinery", "class": 2, "rating": "C", "price": 96390}, {"name": "Refinery", "class": 2, "rating": "B", "price": 289170}, {"name": "Refinery", "class": 2, "rating": "A", "price": 867510}, {"name": "Refinery", "class": 3, "rating": "E", "price": 22491}, {"name": "Refinery", "class": 3, "rating": "D", "price": 67473}, {"name": "Refinery", "class": 3, "rating": "C", "price": 202419}, {"name": "Refinery", "class": 3, "rating": "B", "price": 607257}, {"name": "Refinery", "class": 3, "rating": "A", "price": 1821771}, {"name": "Refinery", "class": 4, "rating": "E", "price": 47234}, {"name": "Refinery", "class": 4, "rating": "D", "price": 141695}, {"name": "Refinery", "class": 4, "rating": "C", "price": 425076}, {"name": "Refinery", "class": 4, "rating": "B", "price": 1275238}, {"name": "Refinery", "class": 4, "rating": "A", "price": 3825722}], "ships": [], "services": []}, {"name": "Perrin Ring", "system": "Lumbla", "distance": 9.32795487700814, "orbit": 1286.799261, "has_large_pad": true, "is_planetary": false, "market": [], "modules": [{"name": "Collector Limpet Controller", "class": 1, "rating": "E", "price": 510}, {"name": "Collector Limpet Controller", "class": 1, "rating": "D", "price": 1020}, {"name": "Collector Limpet Controller", "class": 1, "rating": "C", "price": 2040}, {"name": "Collector Limpet Controller", "class": 1, "rating": "B", "price": 4080}, {"name": "Collector Limpet Controller", "class": 1, "rating": "A", "price": 8160}, {"name": "Collector Limpet Controller", "class": 3, "rating": "E", "price": 4590}, {"name": "Collector Limpet Controller", "class": 3, "rating": "D", "price": 9180}, {"name": "Collector Limpet Controller", "class": 3, "rating": "C", "price": 18360}, {"name": "Collector Limpet Controller", "class": 3, "rating": "B", "price": 36720}, {"name": "Collector Limpet Controller", "class": 5, "rating": "E", "price": 41310}, {"name": "Collector Limpet Controller", "class": 5, "rating": "D", "price": 82620}, {"name": "Collector Limpet Controller", "class": 5, "rating": "C", "price": 165240}, {"name": "Collector Limpet Controller", "class": 5, "rating": "B", "price": 330480}, {"name": "Collector Limpet Controller", "class": 7, "rating": "E", "price": 371790}, {"name": "Collector Limpet Controller", "class": 7, "rating": "D", "price": 743580}, {"name": "Collector Limpet Controller", "class": 7, "rating": "C", "price": 1487160}, {"name": "Collector Limpet Controller", "class": 7, "rating": "B", "price": 2974320}, {"name": "Collector Limpet Controller", "class": 7, "rating": "A", "price": 5948640}, {"name": "Prospector Limpet Controller", "class": 1, "rating": "E", "price": 510}, {"name": "Prospector Limpet Controller", "class": 1, "rating": "D", "price": 1020}, {"name": "Prospector Limpet Controller", "class": 1, "rating": "C", "price": 2040}, {"name": "Prospector Limpet Controller", "class": 1, "rating": "B", "price": 4080}, {"name": "Prospector Limpet Controller", "class": 1, "rating": "A", "price": 8160}, {"name": "Prospector Limpet Controller", "class": 3, "rating": "E", "price": 4590}, {"name": "Prospector Limpet Controller", "class": 3, "rating": "D", "price": 9180}, {"name": "Prospector Limpet Controller", "class": 3, "rating": "C", "price": 18360}, {"name": "Prospector Limpet Controller", "class": 3, "rating": "B", "price": 36720}, {"name": "Prospector Limpet Controller", "class": 3, "rating": "A", "price": 73440}, {"name": "Prospector Limpet Controller", "class": 5, "rating": "E", "price": 41310}, {"name": "Prospector Limpet Controller", "class": 5, "rating": "D", "price": 82620}, {"name": "Prospector Limpet Controller", "class": 5, "rating": "C", "price": 165240}, {"name": "Prospector Limpet Controller", "class": 5, "rating": "B", "price": 330480}, {"name": "Prospector Limpet Controller", "class": 5, "rating": "A", "price": 660960}, {"name": "Prospector Limpet Controller", "class": 7, "rating": "E", "price": 371790}, {"name": "Prospector Limpet Controller", "class": 7, "rating": "D", "price": 743580}, {"name": "Prospector Limpet Controller", "class": 7, "rating": "C", "price": 1487160}, {"name": "Prospector Limpet Controller", "class": 7, "rating": "A", "price": 5948640}, {"name": "Refinery", "class": 1, "rating": "E", "price": 5100}, {"name": "Refinery", "class": 1, "rating": "D", "price": 15300}, {"name": "Refinery", "class": 1, "rating": "C", "price": 45900}, {"name": "Refinery", "class": 1, "rating": "B", "price": 137700}, {"name": "Refinery", "class": 1, "rating": "A", "price": 413100}, {"name": "Refinery", "class": 2, "rating": "E", "price": 10710}, {"name": "Refinery", "class": 2, "rating": "D", "price": 32130}, {"name": "Refinery", "class": 2, "rating": "C", "price": 96390}, {"name": "Refinery", "class": 2, "rating": "B", "price": 289170}, {"name": "Refinery", "class": 2, "rating": "A", "price": 867510}, {"name": "Refinery", "class": 3, "rating": "E", "price": 22491}, {"name": "Refinery", "class": 3, "rating": "D", "price": 67473}, {"name": "Refinery", "class": 3, "rating": "C", "price": 202419}, {"name": "Refinery", "class": 3, "rating": "B", "price": 607257}, {"name": "Refinery", "class": 3, "rating": "A", "price": 1821771}, {"name": "Refinery", "class": 4, "rating": "E", "price": 47234}, {"name": "Refinery", "class": 4, "rating": "D", "price": 141695}, {"name": "Refinery", "class": 4, "rating": "C", "price": 425076}, {"name": "Refinery", "class": 4, "rating": "B", "price": 1275238}, {"name": "Refinery", "class": 4, "rating": "A", "price": 3825722}], "ships": [], "services": []}, {"name": "Ciferri Dock", "system": "Galibi", "distance": 11.1988856169933, "orbit": 425.012632, "has_large_pad": false, "is_planetary": false, "market": [], "modules": [{"name": "Collector Limpet Controller", "class": 1, "rating": "C", "price": 2040}, {"name": "Collector Limpet Controller", "class": 3, "rating": "D", "price": 9180}, {"name": "Collector Limpet Controller", "class": 3, "rating": "C", "price": 18360}, {"name": "Collector Limpet Controller", "class": 5, "rating": "E", "price": 41310}, {"name": "Collector Limpet Controller", "class": 5, "rating": "D", "price": 82620}, {"name": "Collector Limpet Controller", "class": 7, "rating": "E", "price": 371790}, {"name": "Collector Limpet Controller", "class": 7, "rating": "D", "price": 743580}, {"name": "Prospector Limpet Controller", "class": 1, "rating": "D", "price": 1020}, {"name": "Prospector Limpet Controller", "class": 1, "rating": "C", "price": 2040}, {"name": "Prospector Limpet Controller", "class": 3, "rating": "D", "price": 9180}, {"name": "Prospector Limpet Controller", "class": 3, "rating": "C", "price": 18360}, {"name": "Prospector Limpet Controller", "class": 5, "rating": "E", "price": 41310}, {"name": "Prospector Limpet Controller", "class": 5, "rating": "D", "price": 82620}, {"name": "Prospector Limpet Controller", "class": 7, "rating": "E", "price": 371790}, {"name": "Prospector Limpet Controller", "class": 7, "rating": "D", "price": 743580}, {"name": "Refinery", "class": 1, "rating": "E", "price": 5100}, {"name": "Refinery", "class": 1, "rating": "D", "price": 15300}, {"name": "Refinery", "class": 1, "rating": "C", "price": 45900}, {"name": "Refinery", "class": 1, "rating": "B", "price": 137700}, {"name": "Refinery", "class": 1, "rating": "A", "price": 413100}, {"name": "Refinery", "class": 2, "rating": "E", "price": 10710}, {"name": "Refinery", "class": 2, "rating": "D", "price": 32130}, {"name": "Refinery", "class": 2, "rating": "C", "price": 96390}, {"name": "Refinery", "class": 2, "rating": "B", "price": 289170}, {"name": "Refinery", "class": 2, "rating": "A", "price": 867510}, {"name": "Refinery", "class": 3, "rating": "B", "price": 607257}, {"name": "Refinery", "class": 3, "rating": "A", "price": 1821771}, {"name": "Refinery", "class": 4, "rating": "D", "price": 141695}, {"name": "Refinery", "class": 4, "rating": "C", "price": 425076}, {"name": "Refinery", "class": 4, "rating": "B", "price": 1275238}], "services": []}]}',
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Head over to Stronghold Carrier in Betel for your mining gear wishlist, since they have everything you\u2019re after.",
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Next stop, Stronghold Carrier; just remember to keep an eye on gravity, atmosphere, and those unplanned planetary faceplants.",
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Must be a Friday somewhere; let's amp up those shields and keep the European Swallow flying smoothly.",
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Ah, the sweet taste of freedom beyond the no fire zone, where space is your playground and asteroids your potential fortune.",
+                    },
+                    {"role": "user", "content": "Engage supercruise"},
+                    {
+                        "role": "assistant",
+                        "content": None,
+                        "tool_calls": [
+                            {
+                                "id": "call_4jaImEKfGHPWdChcdWOXLk5Z",
+                                "function": {
+                                    "arguments": "{}",
+                                    "name": "hyperSuperCombination",
+                                },
+                                "type": "function",
+                            }
+                        ],
+                    },
+                    {
+                        "tool_call_id": "call_4jaImEKfGHPWdChcdWOXLk5Z",
+                        "role": "tool",
+                        "name": "hyperSuperCombination",
+                        "content": "Frame Shift Drive is charging for a jump",
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Frame Shift Drive charging, let\u2019s make this supercruise trip smoother than a mug of Lavian brandy.",
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Welcome to supercruise; keep your eyes peeled for those tempting resource extraction sites.",
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Welcome back to normal space; now let's dock at Stronghold Carrier and outfit your ship with those mining essentials.",
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "Docked at Stronghold Carrier; time to turn your Empire Courier into a mining marvel.",
+                    },
+                    {
+                        "role": "user",
+                        "content": "(Commander Rude has stored a module.)",
+                    },
+                    {"role": "user", "content": "(Commander Rude has sold a module.)"},
+                    {
+                        "role": "user",
+                        "content": "(Commander Rude has sold a remote module.)",
+                    },
+                    {
+                        "role": "user",
+                        "content": "(Commander Rude has bought a module.)",
+                    },
+                    {
+                        "role": "user",
+                        "content": "(Commander Rude has bought a module.)",
+                    },
+                    {
+                        "role": "user",
+                        "content": "(Commander Rude has bought a module.)",
+                    },
+                    {
+                        "role": "user",
+                        "content": "Alright, I think I have equipped everything I need for my trip, can I confirm?",
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "You've now added three mining lasers, a prospector controller, a cargo rack, and enough collector limpets to do the job, so you're ready to chase down those shiny asteroids.",
+                    },
+                    {"role": "user", "content": "No finery?"},
+                    {
+                        "role": "assistant",
+                        "content": "Apologies for the oversight; you've got your A-rated Refinery aboard and ready to turn those mined fragments into profits.",
+                    },
+                    {"role": "user", "content": "(Commander Rude has refueled all.)"},
+                    {
+                        "role": "user",
+                        "content": "(Commander Rude has undocked from a station.)",
+                    },
+                    {
+                        "role": "assistant",
+                        "content": "And we're off! Time to say goodbye to the Stronghold Carrier and explore the next adventure in your freshly outfitted mining vessel.",
+                    },
+                    {"role": "user", "content": "Well, fuck. I forgot to buy Limpets."},
+                    {
+                        "role": "assistant",
+                        "content": "It's a case of \"Houston, we have a problem\", but luckily we're not too far to fix it; head back and grab those Limpets before we're mining with empty nets.",
+                    },
+                    {
+                        "role": "user",
+                        "content": '(Commander Rude has sent a request to dock with a station. Details: {"timestamp": "2024-11-30T23:16:08Z", "event": "DockingRequested", "MarketID": 3930406401, "StationName": "Stronghold Carrier", "StationType": "SurfaceStation", "LandingPads": {"Small": 4, "Medium": 4, "Large": 2}, "id": "Journal.2024-12-01T000200.01.log.000082"})',
+                    },
+                    {
+                        "role": "user",
+                        "content": '(Commander Rude has received a text message. Details: {"timestamp": "2024-11-30T23:16:08Z", "event": "ReceiveText", "From": "Stronghold Carrier", "Message": "$DockingChatter_Allied;", "Message_Localised": "An ally like you is always welcome here.", "Channel": "npc", "id": "Journal.2024-12-01T000200.01.log.000083"})',
+                    },
+                    {
+                        "role": "user",
+                        "content": '(Commander Rude has received a text message. Details: {"timestamp": "2024-11-30T23:16:08Z", "event": "ReceiveText", "From": "Stronghold Carrier", "Message": "$STATION_docking_granted;", "Message_Localised": "Docking request granted.", "Channel": "npc", "id": "Journal.2024-12-01T000200.01.log.000084"})',
+                    },
+                    {
+                        "role": "user",
+                        "content": '(Commander Rude\'s request to dock with a station has been granted. Details: {"timestamp": "2024-11-30T23:16:08Z", "event": "DockingGranted", "LandingPad": 7, "MarketID": 3930406401, "StationName": "Stronghold Carrier", "StationType": "SurfaceStation", "id": "Journal.2024-12-01T000200.01.log.000085"})',
+                    },
+                    {"role": "user", "content": "Wait, what landing pad?"},
                 ],
                 "tools": tools,
             },
