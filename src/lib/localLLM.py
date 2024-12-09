@@ -32,10 +32,15 @@ smollm2_finetune_preset = {
 }
 
 model_presets = {
+    "lmstudio-community/Llama-3.2-1B-Instruct-GGUF": {
+        **llama_finetune_preset,
+        "filename": "Llama-3.2-1B-Instruct-Q8_0.gguf",
+    },
     "lmstudio-community/Llama-3.2-3B-Instruct-GGUF": {
         **llama_finetune_preset,
         "filename": "Llama-3.2-3B-Instruct-Q8_0.gguf",
     },
+    "lucaelin/llama-3.2-1b-instruct-cn-v2-gguf": llama_finetune_preset,
     "lmstudio-community/Llama-3.1-8B-Instruct-GGUF": {
         **llama_finetune_preset,
         "filename": "Llama-3.1-8B-Instruct-Q8_0.gguf",
