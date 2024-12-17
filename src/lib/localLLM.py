@@ -44,8 +44,18 @@ model_presets = {
         **llama_finetune_preset,
         "filename": "Llama-3.1-8B-Instruct-Q8_0.gguf",
     },
-    "lucaelin/llama-3.2-1b-instruct-cn-v2-gguf": llama_finetune_preset,
-    "lucaelin/llama-3.2-3b-instruct-cn-v2-gguf": llama_finetune_preset,
+    "NousResearch/Hermes-3-Llama-3.2-3B-GGUF": {
+        "filename": "Hermes-3-Llama-3.2-3B.Q8_0.gguf",
+        "template": '{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message[\'role\'] %}{% if \'tool_calls\' in message %}{% set text = \'<tool_call>\' + message[\'tool_calls\'][0][\'function\']|tojson + \'</tool_call>\' %}{% endif %}{% if \'content\' in message %}{% set text = message[\'content\'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = message[\'content\'] + \'\n\nYou are a function calling AI model. You are provided with function signatures within <tools></tools> XML tags. You may call one or more functions to assist with the user query. Don\'t make assumptions about what values to plug into functions. Here are the available tools: <tools> \' + tools|tojson + \' </tools> Use the following pydantic model json schema for each tool call you will make: {"properties": {"arguments": {"title": "Arguments", "type": "object"}, "name": {"title": "Name", "type": "string"}}, "required": ["arguments", "name"], "title": "FunctionCall", "type": "object"} For each function call return a json object with function name and arguments within <tool_call></tool_call> XML tags as follows: \n<tool_call>\n{"arguments": <args-dict>, "name": <function-name>}\n</tool_call>\' %}{% endif %}{% if role == \'tool\' %}{% set content = \'<|im_start|>user\n<tool_response>\n\'+ text | trim + \'\n</tool_response>\n<|im_end|>\' %}{% else %}{% set content = \'<|im_start|>\' + role + \'\n\'+ text | trim + \'<|im_end|>\' %}{% endif %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ \'<|im_start|>assistant\n\' }}',
+        "tool_use_grammar": lambda tools: f"""
+            root   ::= ("<tool_call>\n" {gbnf_or([gbnf_sanitize(tool["function"]["name"]) for tool in tools])} "\n</tool_call>") | (nottoolcalls .*)
+            nottoolcalls ::= {gbnf_not("<tool_call>")}
+        """,
+        "tool_use_regex": "^<tool_call>\n(.*)\n</tool_call>",
+        "tool_use_parser": lambda regex: [json.loads(regex.group(1))],
+    },
+    "lucaelin/llama-3.2-1b-instruct-cn-v2-1e-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.2-3b-instruct-cn-v2-1e-gguf": llama_finetune_preset,
     "lucaelin/llama-3.1-8b-instruct-cn-v2-gguf": llama_finetune_preset,
     "lucaelin/SmolLM2-360M-Instruct-fc-cn-gguf": smollm2_finetune_preset,
     "lucaelin/SmolLM2-1.7B-Instruct-fc-cn-gguf": smollm2_finetune_preset,

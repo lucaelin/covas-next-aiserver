@@ -3,9 +3,14 @@ import time
 from faster_whisper import WhisperModel
 import samplerate
 import soundfile as sf
+import moonshine_onnx
+import numpy as np
+from functools import partial
 
 stt_models_names = [
     "None",
+    "moonshine/tiny",
+    "moonshine/base",
     "distil-medium.en",
     "distil-small.en",
     "tiny",
@@ -30,11 +35,29 @@ def init_stt(model_name="distil-medium.en"):
     if model_name == "None":
         return None
 
+    if model_name.startswith("moonshine/"):
+
+        def transcribe(audio, language):
+            text = moonshine_onnx.transcribe(audio, model=model_name)
+            return text, {}
+
+        return transcribe
+
     model = WhisperModel(model_name, device="cpu", compute_type="int8")
-    return model
+
+    def transcribe(audio, language):
+        gen, info = model.transcribe(audio, language=language, beam_size=4)
+
+        segments = []
+        for segment in gen:
+            segments.append(segment)
+
+        return segments, info
+
+    return transcribe
 
 
-def stt(model: WhisperModel, wav: bytes, language="en-US"):
+def stt(transcribe, wav: bytes, language="en-US"):
     # convert wav bytes to 16k S16_LE
 
     start = time.time()
@@ -47,11 +70,8 @@ def stt(model: WhisperModel, wav: bytes, language="en-US"):
     print("Resample time:", end - start)
 
     start = time.time()
-    gen, info = model.transcribe(audio, language=language, beam_size=4)
 
-    segments = []
-    for segment in gen:
-        segments.append(segment)
+    segments, info = transcribe(audio, language=language)
 
     end = time.time()
     print("Transcribe time:", end - start)

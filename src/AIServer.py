@@ -149,8 +149,8 @@ def createTranscription():
     name, file = next(request.files.items())
     print(name, file)
 
-    segments, info = stt(stt_model, file.stream.read(), language)
-    text = "".join([segment.text for segment in segments])
+    text, info = stt(stt_model, file.stream.read(), language)
+    # text = "".join([segment.text for segment in segments])
     return jsonify({"text": text})  # TODO more details, spec compliance
 
 
