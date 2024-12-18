@@ -94,8 +94,14 @@ def create_chat_completion_handler(
             result = jinja_template.render(
                 add_generation_prompt=True,
                 messages=messages,
-                functions=functions,
+                functions=(
+                    [tool["function"] for tool in tools if "function" in tool]
+                    if tools
+                    else None
+                ),
                 function_call=function_call,
+                controls=None,
+                documents=None,
                 tools=tools,
                 tool_choice=tool_choice,
                 eos_token=eos_token_set,
