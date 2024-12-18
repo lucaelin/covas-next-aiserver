@@ -138,7 +138,7 @@ def create_chat_completion_handler(
         print(result)
 
         stop = [] if stop is None else ([stop] if isinstance(stop, str) else stop)
-        stop += [eos_token_set]
+        stop = stop + [eos_token_set]
 
         if response_format is not None and response_format["type"] == "json_object":
             grammar = llama_grammar.LlamaGrammar.from_string(

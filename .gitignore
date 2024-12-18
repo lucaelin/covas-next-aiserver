@@ -11,6 +11,4 @@ conversation.json
 .env
 .cache
 /linux_ed
-eval/**/*.json
-eval/**/*.yml
 *.db
