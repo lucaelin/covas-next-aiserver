@@ -19,7 +19,8 @@ from .localLLMGrammarUtils import functions_to_gbnf
 
 def create_chat_completion_handler(
     template: str,
-    tool_use_grammar: str,
+    tool_use_grammar: Callable[[List[llama_types.ChatCompletionTool]], str],
+    no_tool_use_grammar: Callable[[List[llama_types.ChatCompletionTool]], str],
     tool_use_regex: str,
     tool_use_parser: (
         Callable[[re.Match], List[llama_types.ChatCompletionFunction]] | None
@@ -149,16 +150,20 @@ def create_chat_completion_handler(
                     json.dumps(response_format["schema"]), verbose=False
                 )
 
-        if tools and tool_choice != "none":
-            grammar_str = (
-                functions_to_gbnf(
-                    [tool["function"] for tool in tools if tool["type"] == "function"]
-                )
-                + "\n"
-            )
-            grammar_str += tool_use_grammar(tools)
+        grammar_str = functions_to_gbnf(
+            [tool["function"] for tool in tools if tool["type"] == "function"]
+        )
 
-            grammar = llama_grammar.LlamaGrammar.from_string(grammar_str, verbose=False)
+        grammar_str += "\ntooluse ::= " + tool_use_grammar(tools)
+        grammar_str += "\nnotooluse ::= " + no_tool_use_grammar(tools)
+        if tool_choice == "none":
+            grammar_str += "\nroot ::= notooluse .*"
+        elif tool_choice == "auto":
+            grammar_str += "\nroot ::= tooluse | (notooluse .*)"
+        elif tool_choice == "required":
+            grammar_str += "\nroot ::= tooluse"
+
+        grammar = llama_grammar.LlamaGrammar.from_string(grammar_str, verbose=False)
 
         if llama.cache:
             llama._ctx.set_rng_seed(1)  # deterministic cache
