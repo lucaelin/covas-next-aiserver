@@ -288,5 +288,5 @@ yarl==1.18.3
 # The following packages are considered to be unsafe in a requirements file:
 # setuptools
 
-useful-moonshine-onnx==git+https://git@github.com/usefulsensors/moonshine.git#subdirectory=moonshine-onnx
+useful-moonshine-onnx @ git+https://git@github.com/usefulsensors/moonshine.git#subdirectory=moonshine-onnx
 
