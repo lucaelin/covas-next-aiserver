@@ -54,9 +54,9 @@ model_presets = {
         "tool_use_regex": "^<tool_call>\n(.*)\n</tool_call>",
         "tool_use_parser": lambda regex: [json.loads(regex.group(1))],
     },
-    "lucaelin/llama-3.2-1b-instruct-cn-v2-1e-gguf": llama_finetune_preset,
-    "lucaelin/llama-3.2-3b-instruct-cn-v2-1e-gguf": llama_finetune_preset,
-    "lucaelin/llama-3.1-8b-instruct-cn-v2-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.2-1b-instruct-cn-g-1e-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.2-3b-instruct-cn-g-1e-gguf": llama_finetune_preset,
+    # "lucaelin/llama-3.1-8b-instruct-cn-v2-gguf": llama_finetune_preset,
     "lucaelin/SmolLM2-360M-Instruct-fc-cn-gguf": smollm2_finetune_preset,
     "lucaelin/SmolLM2-1.7B-Instruct-fc-cn-gguf": smollm2_finetune_preset,
     "lmstudio-community/SmolLM2-1.7B-Instruct-GGUF": {
