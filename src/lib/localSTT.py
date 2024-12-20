@@ -9,8 +9,6 @@ from functools import partial
 
 stt_models_names = [
     "None",
-    "moonshine/tiny",
-    "moonshine/base",
     "distil-medium.en",
     "distil-small.en",
     "tiny",
@@ -28,6 +26,8 @@ stt_models_names = [
     "distil-large-v2",
     "distil-large-v3",
     "deepdml/faster-whisper-large-v3-turbo-ct2",
+    "moonshine/tiny",
+    "moonshine/base",
 ]
 
 
