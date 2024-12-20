@@ -20,7 +20,7 @@ from .localLLMGrammarUtils import functions_to_gbnf
 def create_chat_completion_handler(
     template: str,
     tool_use_grammar: Callable[[List[llama_types.ChatCompletionTool]], str],
-    no_tool_use_grammar: Callable[[List[llama_types.ChatCompletionTool]], str],
+    no_tool_use_grammar: Callable[[], str],
     tool_use_regex: str,
     tool_use_parser: (
         Callable[[re.Match], List[llama_types.ChatCompletionFunction]] | None
@@ -155,7 +155,7 @@ def create_chat_completion_handler(
         )
 
         grammar_str += "\ntooluse ::= " + tool_use_grammar(tools)
-        grammar_str += "\nnotooluse ::= " + no_tool_use_grammar(tools)
+        grammar_str += "\nnotooluse ::= " + no_tool_use_grammar()
         if tool_choice == "none":
             grammar_str += "\nroot ::= notooluse .*"
         elif tool_choice == "auto":
