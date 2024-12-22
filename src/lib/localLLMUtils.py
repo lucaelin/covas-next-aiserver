@@ -150,16 +150,19 @@ def create_chat_completion_handler(
                     json.dumps(response_format["schema"]), verbose=False
                 )
 
-        grammar_str = functions_to_gbnf(
-            [tool["function"] for tool in tools if tool["type"] == "function"]
-        )
+        if tools:
+            grammar_str = functions_to_gbnf(
+                [tool["function"] for tool in tools if tool["type"] == "function"]
+            )
+            grammar_str += "\ntooluse ::= " + tool_use_grammar(tools)
+        else:
+            grammar_str = ""
 
-        grammar_str += "\ntooluse ::= " + tool_use_grammar(tools)
         grammar_str += "\nnotooluse ::= " + no_tool_use_grammar()
-        if tool_choice == "none":
-            grammar_str += "\nroot ::= notooluse .*"
+        if not tools or tool_choice == "none":
+            grammar_str += "\nroot ::= notooluse"
         elif tool_choice == "auto":
-            grammar_str += "\nroot ::= tooluse | (notooluse .*)"
+            grammar_str += "\nroot ::= tooluse | notooluse"
         elif tool_choice == "required":
             grammar_str += "\nroot ::= tooluse"
 

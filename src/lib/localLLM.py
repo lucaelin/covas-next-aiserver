@@ -14,7 +14,7 @@ llama_finetune_preset = {
     "filename": "unsloth.Q8_0.gguf",
     "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if 'tool_calls' in message and message['tool_calls'] %}{% set text = '<tool_call>{\"name\": \"' + message['tool_calls'][0]['function']['name'] + '\", \"arguments\": \"' + message['tool_calls'][0]['function']['arguments'] + '\"}</tool_call>' %}{% else %}{% set text = '' %}{% endif %}{% if 'content' in message and message['content'] %}{% set text = text + '\n\n' + message['content'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = text + '\n\nYou are able to call the following tools, when needed, call them using the <tool_call> xml-tag, followed by name and arguments as json.\n<tools>\n' + tools|tojson + '\n</tools>' %}{% endif %}{% if loop.index0 == 0 and documents is defined %}{% set text = text + '\n\nWhen answering questions, stick to information found in the following documents:\n<documents>\n' + documents|tojson + '\n</documents>' %}{% endif %}{% set content = '<|start_header_id|>' + role + '<|end_header_id|>\n\n'+ text | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{% if add_generation_prompt %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}{% endif %}",
     "tool_use_grammar": lambda tools: f"""("<tool_call>" {gbnf_or([gbnf_sanitize(tool["function"]["name"]) for tool in tools])} "</tool_call>")""",
-    "no_tool_use_grammar": lambda: f"""{gbnf_not("<tool_call>")}""",
+    "no_tool_use_grammar": lambda: f"""{gbnf_not("<tool_call")}""",
     "tool_use_regex": "^<tool_call>(.*)</tool_call>",
     "tool_use_parser": lambda regex: [json.loads(regex.group(1))],
 }
@@ -23,11 +23,15 @@ smollm2_finetune_preset = {
     "filename": "unsloth.Q8_0.gguf",
     "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% set text = '' %}{% if 'tool_calls' in message and message['tool_calls'] %}{% set text = text + '<tool_call>' + message['tool_calls'][0]['function']|tojson + '</tool_call>\n' %}{% endif %}{% if 'content' in message and message['content'] %}{% set text = text + message['content'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = text + '\n\nYou have access to the following tools:\n<tools>\n' + tools|tojson + '\n</tools>' %}{% endif %}{% set content = '<|im_start|>' + role + '\n'+ text | trim + '<|im_end|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|im_start|>assistant\n' }}",
     "tool_use_grammar": lambda tools: f"""("<tool_call>[\\n" {gbnf_or([gbnf_sanitize(tool["function"]["name"])+' ' for tool in tools])} "\\n]</tool_call>")""",
-    "no_tool_use_grammar": lambda: f"""{gbnf_not("<tool_call>")}""",
+    "no_tool_use_grammar": lambda: f"""{gbnf_not("<tool_call")}""",
     "tool_use_regex": "^<tool_call>((.|\\n)*)</tool_call>",
 }
 
 model_presets = {
+    "lucaelin/llama-3.2-1b-instruct-cn-v2.1-1e-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.2-1b-instruct-cn-g-1e-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.2-3b-instruct-cn-v2.1-1e-gguf": llama_finetune_preset,
+    "lucaelin/llama-3.2-3b-instruct-cn-g-1e-gguf": llama_finetune_preset,
     "lmstudio-community/Llama-3.2-1B-Instruct-GGUF": {
         **llama_finetune_preset,
         "filename": "Llama-3.2-1B-Instruct-Q8_0.gguf",
@@ -36,9 +40,9 @@ model_presets = {
         **llama_finetune_preset,
         "filename": "Llama-3.2-3B-Instruct-Q8_0.gguf",
     },
-    "lmstudio-community/Llama-3.1-8B-Instruct-GGUF": {
+    "lmstudio-community/Meta-Llama-3.1-8B-Instruct-GGUF": {
         **llama_finetune_preset,
-        "filename": "Llama-3.1-8B-Instruct-Q8_0.gguf",
+        "filename": "Meta-Llama-3.1-8B-Instruct-Q8_0.gguf",
     },
     "NousResearch/Hermes-3-Llama-3.2-3B-GGUF": {
         "filename": "Hermes-3-Llama-3.2-3B.Q8_0.gguf",
@@ -48,31 +52,37 @@ model_presets = {
         "tool_use_regex": "^<tool_call>\n(.*)\n</tool_call>",
         "tool_use_parser": lambda regex: [json.loads(regex.group(1))],
     },
-    "lucaelin/llama-3.2-1b-instruct-cn-g-1e-gguf": llama_finetune_preset,
-    "lucaelin/llama-3.2-3b-instruct-cn-g-1e-gguf": llama_finetune_preset,
+    "NousResearch/Hermes-3-Llama-3.1-8B-GGUF": {
+        "filename": "Hermes-3-Llama-3.1-8B.Q8_0.gguf",
+        "template": '{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message[\'role\'] %}{% if \'tool_calls\' in message %}{% set text = \'<tool_call>\' + message[\'tool_calls\'][0][\'function\']|tojson + \'</tool_call>\' %}{% endif %}{% if \'content\' in message %}{% set text = message[\'content\'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = message[\'content\'] + \'\n\nYou are a function calling AI model. You are provided with function signatures within <tools></tools> XML tags. You may call one or more functions to assist with the user query. Don\\\'t make assumptions about what values to plug into functions. Here are the available tools: <tools> \' + tools|tojson + \' </tools> Use the following pydantic model json schema for each tool call you will make: {"properties": {"arguments": {"title": "Arguments", "type": "object"}, "name": {"title": "Name", "type": "string"}}, "required": ["arguments", "name"], "title": "FunctionCall", "type": "object"} For each function call return a json object with function name and arguments within <tool_call></tool_call> XML tags as follows: \n<tool_call>\n{"arguments": <args-dict>, "name": <function-name>}\n</tool_call>\' %}{% endif %}{% if role == \'tool\' %}{% set content = \'<|im_start|>user\n<tool_response>\n\'+ text | trim + \'\n</tool_response>\n<|im_end|>\' %}{% endif %}{% if role != \'tool\' %}{% set content = \'<|im_start|>\' + role + \'\n\'+ text | trim + \'<|im_end|>\' %}{% endif %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ \'<|im_start|>assistant\n\' }}',
+        "tool_use_grammar": lambda tools: f"""("<tool_call>\n" {gbnf_or([gbnf_sanitize(tool["function"]["name"]) for tool in tools])} "\n</tool_call>")""",
+        "no_tool_use_grammar": lambda: f"""{gbnf_not("<tool_call>")}""",
+        "tool_use_regex": "^<tool_call>\n(.*)\n</tool_call>",
+        "tool_use_parser": lambda regex: [json.loads(regex.group(1))],
+    },
     # "lucaelin/llama-3.1-8b-instruct-cn-v2-gguf": llama_finetune_preset,
-    "lucaelin/SmolLM2-360M-Instruct-fc-cn-gguf": smollm2_finetune_preset,
-    "lucaelin/SmolLM2-1.7B-Instruct-fc-cn-gguf": smollm2_finetune_preset,
-    "lmstudio-community/SmolLM2-1.7B-Instruct-GGUF": {
-        "filename": "SmolLM2-1.7B-Instruct-Q8_0.gguf",
-        "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if 'tool_calls' in message %}{% set text = '<tool_call>' + message['tool_calls'][0]['function']|tojson + '</tool_call>' %}{% endif %}{% if 'content' in message %}{% set text = message['content'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\n\nYou have access to the following tools:\n<tools>\n' + tools|tojson + '\n</tools>' %}{% endif %}{% set content = '<|im_start|>' + role + '\n'+ text | trim + '<|im_end|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|im_start|>assistant\n' }}",
-        "tool_use_grammar": lambda tools: f"""("<tool_call>[\\n" {gbnf_or([gbnf_sanitize(tool["function"]["name"])+' ' for tool in tools])} "\\n]</tool_call>")""",
-        "no_tool_use_grammar": lambda: f"""{gbnf_not("<tool_call>")}""",
-        "tool_use_regex": "^<tool_call>((.|\\n)*)</tool_call>",
-        "max_context": 1024 * 16,
-        "rope_scaling_type": 1,
-        "rope_freq_scale": 2,
-    },
-    "lmstudio-community/SmolLM2-360M-Instruct-GGUF": {
-        "filename": "SmolLM2-360M-Instruct-Q8_0.gguf",
-        "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if 'tool_calls' in message %}{% set text = '<tool_call>' + message['tool_calls'][0]['function']|tojson + '</tool_call>' %}{% endif %}{% if 'content' in message %}{% set text = message['content'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\n\nYou have access to the following tools:\n<tools>\n' + tools|tojson + '\n</tools>' %}{% endif %}{% set content = '<|im_start|>' + role + '\n'+ text | trim + '<|im_end|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|im_start|>assistant\n' }}",
-        "tool_use_grammar": lambda tools: f"""("<tool_call>[\\n" {gbnf_or([gbnf_sanitize(tool["function"]["name"])+' ' for tool in tools])} "\\n]</tool_call>")""",
-        "no_tool_use_grammar": lambda: f"""{gbnf_not("<tool_call>")}""",
-        "tool_use_regex": "^<tool_call>((.|\\n)*)</tool_call>",
-        "max_context": 1024 * 16,
-        "rope_scaling_type": 1,
-        "rope_freq_scale": 2,
-    },
+    # "lucaelin/SmolLM2-360M-Instruct-fc-cn-gguf": smollm2_finetune_preset,
+    # "lucaelin/SmolLM2-1.7B-Instruct-fc-cn-gguf": smollm2_finetune_preset,
+    # "lmstudio-community/SmolLM2-1.7B-Instruct-GGUF": {
+    #    "filename": "SmolLM2-1.7B-Instruct-Q8_0.gguf",
+    #    "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if 'tool_calls' in message %}{% set text = '<tool_call>' + message['tool_calls'][0]['function']|tojson + '</tool_call>' %}{% endif %}{% if 'content' in message %}{% set text = message['content'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\n\nYou have access to the following tools:\n<tools>\n' + tools|tojson + '\n</tools>' %}{% endif %}{% set content = '<|im_start|>' + role + '\n'+ text | trim + '<|im_end|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|im_start|>assistant\n' }}",
+    #    "tool_use_grammar": lambda tools: f"""("<tool_call>[\\n" {gbnf_or([gbnf_sanitize(tool["function"]["name"])+' ' for tool in tools])} "\\n]</tool_call>")""",
+    #    "no_tool_use_grammar": lambda: f"""{gbnf_not("<tool_call>")}""",
+    #    "tool_use_regex": "^<tool_call>((.|\\n)*)</tool_call>",
+    #    "max_context": 1024 * 16,
+    #    "rope_scaling_type": 1,
+    #    "rope_freq_scale": 2,
+    # },
+    # "lmstudio-community/SmolLM2-360M-Instruct-GGUF": {
+    #    "filename": "SmolLM2-360M-Instruct-Q8_0.gguf",
+    #    "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if 'tool_calls' in message %}{% set text = '<tool_call>' + message['tool_calls'][0]['function']|tojson + '</tool_call>' %}{% endif %}{% if 'content' in message %}{% set text = message['content'] %}{% endif %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\n\nYou have access to the following tools:\n<tools>\n' + tools|tojson + '\n</tools>' %}{% endif %}{% set content = '<|im_start|>' + role + '\n'+ text | trim + '<|im_end|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|im_start|>assistant\n' }}",
+    #    "tool_use_grammar": lambda tools: f"""("<tool_call>[\\n" {gbnf_or([gbnf_sanitize(tool["function"]["name"])+' ' for tool in tools])} "\\n]</tool_call>")""",
+    #    "no_tool_use_grammar": lambda: f"""{gbnf_not("<tool_call>")}""",
+    #    "tool_use_regex": "^<tool_call>((.|\\n)*)</tool_call>",
+    #    "max_context": 1024 * 16,
+    #    "rope_scaling_type": 1,
+    #    "rope_freq_scale": 2,
+    # },
     "lmstudio-community/Mistral-7B-Instruct-v0.3-GGUF": {
         "filename": "Mistral-7B-Instruct-v0.3-IQ4_NL.gguf",
         "template": '{%- if messages[0]["role"] == "system" %}\n    {%- set system_message = messages[0]["content"] %}\n    {%- set loop_messages = messages[1:] %}\n{%- else %}\n    {%- set loop_messages = messages %}\n{%- endif %}\n{%- if not tools is defined %}\n    {%- set tools = none %}\n{%- endif %}\n{%- set user_messages = loop_messages | selectattr("role", "equalto", "user") | list %}\n\n{#- This block checks for alternating user/assistant messages, skipping tool calling messages #}\n{%- set ns = namespace() %}\n{%- set ns.index = 0 %}\n{%- for message in loop_messages %}\n    {%- if not (message.role == "tool" or message.role == "tool_results" or (message.tool_calls is defined and message.tool_calls is not none)) %}\n        {%- if (message["role"] == "user") != (ns.index % 2 == 0) %}\n            {{- raise_exception("After the optional system message, conversation roles must alternate user/assistant/user/assistant/...") }}\n        {%- endif %}\n        {%- set ns.index = ns.index + 1 %}\n    {%- endif %}\n{%- endfor %}\n\n{{- bos_token }}\n{%- for message in loop_messages %}\n    {%- if message["role"] == "user" %}\n        {%- if tools is not none and (message == user_messages[-1]) %}\n            {{- "[AVAILABLE_TOOLS] [" }}\n            {%- for tool in tools %}\n                {%- set tool = tool.function %}\n                {{- \'{"type": "function", "function": {\' }}\n                {%- for key, val in tool.items() if key != "return" %}\n                    {%- if val is string %}\n                        {{- \'"\' + key + \'": "\' + val + \'"\' }}\n                    {%- else %}\n                        {{- \'"\' + key + \'": \' + val|tojson }}\n                    {%- endif %}\n                    {%- if not loop.last %}\n                        {{- ", " }}\n                    {%- endif %}\n                {%- endfor %}\n                {{- "}}" }}\n                {%- if not loop.last %}\n                    {{- ", " }}\n                {%- else %}\n                    {{- "]" }}\n                {%- endif %}\n            {%- endfor %}\n            {{- "[/AVAILABLE_TOOLS]" }}\n            {%- endif %}\n        {%- if loop.last and system_message is defined %}\n            {{- "[INST] " + system_message + "\\n\\n" + message["content"] + "[/INST]" }}\n        {%- else %}\n            {{- "[INST] " + message["content"] + "[/INST]" }}\n        {%- endif %}\n    {%- elif message.tool_calls is defined and message.tool_calls is not none %}\n        {{- "[TOOL_CALLS] [" }}\n        {%- for tool_call in message.tool_calls %}\n            {%- set out = tool_call.function|tojson %}\n            {{- out[:-1] }}\n            {%- if not tool_call.id is defined or tool_call.id|length != 9 %}\n                {{- raise_exception("Tool call IDs should be alphanumeric strings with length 9!") }}\n            {%- endif %}\n            {{- \', "id": "\' + tool_call.id + \'"}\' }}\n            {%- if not loop.last %}\n                {{- ", " }}\n            {%- else %}\n                {{- "]" + eos_token }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif message["role"] == "assistant" %}\n        {{- " " + message["content"]|trim + eos_token}}\n    {%- elif message["role"] == "tool_results" or message["role"] == "tool" %}\n        {%- if message.content is defined and message.content.content is defined %}\n            {%- set content = message.content.content %}\n        {%- else %}\n            {%- set content = message.content %}\n        {%- endif %}\n        {{- \'[TOOL_RESULTS] {"content": \' + content|string + ", " }}\n        {%- if not message.tool_call_id is defined or message.tool_call_id|length != 9 %}\n            {{- raise_exception("Tool call IDs should be alphanumeric strings with length 9!") }}\n        {%- endif %}\n        {{- \'"call_id": "\' + message.tool_call_id + \'"}[/TOOL_RESULTS]\' }}\n    {%- else %}\n        {{- raise_exception("Only user and assistant roles are supported, with the exception of an initial optional system message!") }}\n    {%- endif %}\n{%- endfor %}\n',
@@ -80,16 +90,16 @@ model_presets = {
         "no_tool_use_grammar": lambda: f"""{gbnf_not("[TOOL_CALLS] ")}""",
         "tool_use_regex": "^\\[TOOL_CALLS\\] (\\[.*\\])$",
     },
-    "lmstudio-community/Meta-Llama-3.1-8B-Instruct-GGUF": {
-        "filename": "Meta-Llama-3.1-8B-Instruct-IQ4_XS.gguf",
-        "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if role == 'tool' %}{% set role = 'ipython' %}{% endif %}{% set text = message['content'] %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\nHere is a list of functions in JSON format that you can invoke:\n' + tools|tojson + '\nShould you decide to return the function call, must put it at the beginning of your response, without any additional text and in the following format: [func_name({\"params_name1\":\"params_value1\", \"params_name2\"=\"params_value2\"})]. You may also choose not to call any function, if no function matches the users request.' %}{% endif %}{% set content = '<|start_header_id|>' + role + '<|end_header_id|>\n\n'+ text | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}",
-        "tool_use_grammar": lambda tools: f"""("[" {gbnf_or([gbnf_literal(tool["function"]["name"])+'"("'+gbnf_sanitize(tool["function"]["name"])+'-arguments'+'")"' for tool in tools])} "]" )""",
-        "no_tool_use_grammar": lambda: f"""( [^\\[] )""",
-        "tool_use_regex": "^\\[([a-zA-Z0-9_-]+)\\((.*)\\)\\]$",
-        "tool_use_parser": lambda regex: [
-            {"name": regex.groups()[0], "arguments": json.loads(regex.groups()[1])}
-        ],
-    },
+    # "lmstudio-community/Meta-Llama-3.1-8B-Instruct-GGUF": {
+    #    "filename": "Meta-Llama-3.1-8B-Instruct-IQ4_XS.gguf",
+    #    "template": "{% set loop_messages = messages %}{% for message in loop_messages %}{% set role = message['role'] %}{% if role == 'tool' %}{% set role = 'ipython' %}{% endif %}{% set text = message['content'] %}{% if loop.index0 == 0 and tools is defined %}{% set text = message['content'] + '\nHere is a list of functions in JSON format that you can invoke:\n' + tools|tojson + '\nShould you decide to return the function call, must put it at the beginning of your response, without any additional text and in the following format: [func_name({\"params_name1\":\"params_value1\", \"params_name2\"=\"params_value2\"})]. You may also choose not to call any function, if no function matches the users request.' %}{% endif %}{% set content = '<|start_header_id|>' + role + '<|end_header_id|>\n\n'+ text | trim + '<|eot_id|>' %}{% if loop.index0 == 0 %}{% set content = bos_token + content %}{% endif %}{{ content }}{% endfor %}{{ '<|start_header_id|>assistant<|end_header_id|>\n\n' }}",
+    #    "tool_use_grammar": lambda tools: f"""("[" {gbnf_or([gbnf_literal(tool["function"]["name"])+'"("'+gbnf_sanitize(tool["function"]["name"])+'-arguments'+'")"' for tool in tools])} "]" )""",
+    #    "no_tool_use_grammar": lambda: f"""( [^\\[] )""",
+    #    "tool_use_regex": "^\\[([a-zA-Z0-9_-]+)\\((.*)\\)\\]$",
+    #    "tool_use_parser": lambda regex: [
+    #        {"name": regex.groups()[0], "arguments": json.loads(regex.groups()[1])}
+    #    ],
+    # },
     "lmstudio-community/Mistral-Nemo-Instruct-2407-GGUF": {
         "filename": "Mistral-Nemo-Instruct-2407-IQ4_XS.gguf",
         "template": '{%- if messages[0]["role"] == "system" %}\n    {%- set system_message = messages[0]["content"] %}\n    {%- set loop_messages = messages[1:] %}\n{%- else %}\n    {%- set loop_messages = messages %}\n{%- endif %}\n{%- if not tools is defined %}\n    {%- set tools = none %}\n{%- endif %}\n{%- set user_messages = loop_messages | selectattr("role", "equalto", "user") | list %}\n\n{#- This block checks for alternating user/assistant messages, skipping tool calling messages #}\n{%- set ns = namespace() %}\n{%- set ns.index = 0 %}\n{%- for message in loop_messages %}\n    {%- if not (message.role == "tool" or message.role == "tool_results" or (message.tool_calls is defined and message.tool_calls is not none)) %}\n        {%- if (message["role"] == "user") != (ns.index % 2 == 0) %}\n            {{- raise_exception("After the optional system message, conversation roles must alternate user/assistant/user/assistant/...") }}\n        {%- endif %}\n        {%- set ns.index = ns.index + 1 %}\n    {%- endif %}\n{%- endfor %}\n\n{{- bos_token }}\n{%- for message in loop_messages %}\n    {%- if message["role"] == "user" %}\n        {%- if tools is not none and (message == user_messages[-1]) %}\n            {{- "[AVAILABLE_TOOLS] [" }}\n            {%- for tool in tools %}\n                {%- set tool = tool.function %}\n                {{- \'{"type": "function", "function": {\' }}\n                {%- for key, val in tool.items() if key != "return" %}\n                    {%- if val is string %}\n                        {{- \'"\' + key + \'": "\' + val + \'"\' }}\n                    {%- else %}\n                        {{- \'"\' + key + \'": \' + val|tojson }}\n                    {%- endif %}\n                    {%- if not loop.last %}\n                        {{- ", " }}\n                    {%- endif %}\n                {%- endfor %}\n                {{- "}}" }}\n                {%- if not loop.last %}\n                    {{- ", " }}\n                {%- else %}\n                    {{- "]" }}\n                {%- endif %}\n            {%- endfor %}\n            {{- "[/AVAILABLE_TOOLS]" }}\n            {%- endif %}\n        {%- if loop.last and system_message is defined %}\n            {{- "[INST] " + system_message + "\\n\\n" + message["content"] + "[/INST]" }}\n        {%- else %}\n            {{- "[INST] " + message["content"] + "[/INST]" }}\n        {%- endif %}\n    {%- elif message.tool_calls is defined and message.tool_calls is not none %}\n        {{- "[TOOL_CALLS] [" }}\n        {%- for tool_call in message.tool_calls %}\n            {%- set out = tool_call.function|tojson %}\n            {{- out[:-1] }}\n            {%- if not tool_call.id is defined or tool_call.id|length != 9 %}\n                {{- raise_exception("Tool call IDs should be alphanumeric strings with length 9!") }}\n            {%- endif %}\n            {{- \', "id": "\' + tool_call.id + \'"}\' }}\n            {%- if not loop.last %}\n                {{- ", " }}\n            {%- else %}\n                {{- "]" + eos_token }}\n            {%- endif %}\n        {%- endfor %}\n    {%- elif message["role"] == "assistant" %}\n        {{- " " + message["content"]|trim + eos_token}}\n    {%- elif message["role"] == "tool_results" or message["role"] == "tool" %}\n        {%- if message.content is defined and message.content.content is defined %}\n            {%- set content = message.content.content %}\n        {%- else %}\n            {%- set content = message.content %}\n        {%- endif %}\n        {{- \'[TOOL_RESULTS] {"content": \' + content|string + ", " }}\n        {%- if not message.tool_call_id is defined or message.tool_call_id|length != 9 %}\n            {{- raise_exception("Tool call IDs should be alphanumeric strings with length 9!") }}\n        {%- endif %}\n        {{- \'"call_id": "\' + message.tool_call_id + \'"}[/TOOL_RESULTS]\' }}\n    {%- else %}\n        {{- raise_exception("Only user and assistant roles are supported, with the exception of an initial optional system message!") }}\n    {%- endif %}\n{%- endfor %}\n',
@@ -118,32 +128,32 @@ model_presets = {
         "no_tool_use_grammar": lambda: f"""{gbnf_not('<tool_call>')}""",
         "tool_use_regex": "^<tool_call>(\\[.*\\])$",
     },
-    "allenai/OLMoE-1B-7B-0924-Instruct-GGUF": {
-        "filename": "olmoe-1b-7b-0924-instruct-q4_k_m.gguf",
-        "template": "{{ bos_token }}{% for message in messages %}\n{% if message['role'] == 'system' %}\n{{ '<|system|>\n' + message['content'] }}\n{% elif message['role'] == 'user' %}\n{{ '<|user|>\n' + message['content'] }}\n{% elif message['role'] == 'assistant' %}\n{{ '<|assistant|>\n'  + message['content'] + eos_token }}\n{% endif %}\n{% if loop.last and add_generation_prompt %}\n{{ '<|assistant|>' }}\n{% endif %}\n{% endfor %}",
-        "tool_use_grammar": lambda tools: f"""(.*)""",
-        "no_tool_use_grammar": lambda: f"""(.*)""",
-        "tool_use_regex": "^\\[TOOL_CALLS\\] (\\[.*\\])$",
-        "max_context": 4096,
-    },
-    "Salesforce/xLAM-1b-fc-r-gguf": {
-        "filename": "xLAM-1b-fc-r.Q4_K_M.gguf",
-        "template": "{% set system_message = 'You are an AI assistant for function calling.\\n' %}{% if messages[0]['role'] == 'system' %}{% set system_message = messages[0]['content'] %}{% endif %}{% if system_message is defined %}{{ system_message }}{% endif %}{% for message in messages %}{% set content = message['content'] %}{% if message['role'] == 'user' %}{{ '### Instruction:\\n' + content + '\\n### Response:' }}{% elif message['role'] == 'assistant' %}{{ '\\n' + content + '\\n<|EOT|>\\n' }}{% endif %}{% endfor %}",
-        "tool_use_grammar": lambda tools: f"""{gbnf_literal('{"tool_calls": [')} {gbnf_or([gbnf_sanitize(tool["function"]["name"]) for tool in tools])}  {gbnf_literal("]}")}""",
-        "no_tool_use_grammar": lambda: f"""{gbnf_not('{"tool_calls": [')}""",
-        "tool_use_regex": '^\\{"tool_calls": (\\[.*\\])\\}$',
-        # "max_context": 16384,
-    },
-    "bartowski/functionary-small-v3.1-GGUF": {
-        "filename": "functionary-small-v3.1-IQ4_XS.gguf",
-        "template": "{# version=v3-llama3.1 #}{%- if not tools is defined -%}\n    {%- set tools = none -%}\n{%- endif -%}\n\n{%- set has_code_interpreter = tools | selectattr(\"type\", \"equalto\", \"code_interpreter\") | list | length > 0 -%}\n{%- if has_code_interpreter -%}\n    {%- set tools = tools | rejectattr(\"type\", \"equalto\", \"code_interpreter\") | list -%}\n{%- endif -%}\n\n{#- System message + builtin tools #}\n{{- bos_token + \"<|start_header_id|>system<|end_header_id|>\\n\\n\" }}\n{%- if has_code_interpreter %}\n    {{- \"Environment: ipython\\n\\n\" }}\n{%- else -%}\n    {{ \"\\n\"}}\n{%- endif %}\n{{- \"Cutting Knowledge Date: December 2023\\n\\n\" }}\n{%- if tools %}\n    {{- \"\\nYou have access to the following functions:\\n\\n\" }}\n    {%- for t in tools %}\n        {%- if \"type\" in t -%}\n            {{ \"Use the function '\"|safe + t[\"function\"][\"name\"] + \"' to '\"|safe + t[\"function\"][\"description\"] + \"'\\n\"|safe + t[\"function\"] | tojson() }}\n        {%- else -%}\n            {{ \"Use the function '\"|safe + t[\"name\"] + \"' to '\"|safe + t[\"description\"] + \"'\\n\"|safe + t | tojson() }}\n        {%- endif -%}\n        {{- \"\\n\\n\" }}\n    {%- endfor %}\n    {{- '\\nThink very carefully before calling functions.\\nIf a you choose to call a function ONLY reply in the following format:\\n<{start_tag}={function_name}>{parameters}{end_tag}\\nwhere\\n\\nstart_tag => `<function`\\nparameters => a JSON dict with the function argument name as key and function argument value as value.\\nend_tag => `</function>`\\n\\nHere is an example,\\n<function=example_function_name>{\"example_name\": \"example_value\"}</function>\\n\\nReminder:\\n- If looking for real time information use relevant functions before falling back to brave_search\\n- Function calls MUST follow the specified format, start with <function= and end with </function>\\n- Required parameters MUST be specified\\n- Only call one function at a time\\n- Put the entire function call reply on one line\\n\\n' -}}\n{%- endif %}\n{{- \"<|eot_id|>\" -}}\n\n{%- for message in messages -%}\n    {%- if message['role'] == 'user' or message['role'] == 'system' -%}\n        {{ '<|start_header_id|>' + message['role'] + '<|end_header_id|>\\n\\n' + message['content'] + '<|eot_id|>' }}\n    {%- elif message['role'] == 'tool' -%}\n        {{ '<|start_header_id|>ipython<|end_header_id|>\\n\\n' + message['content'] + '<|eot_id|>' }}\n    {%- else -%}\n        {{ '<|start_header_id|>' + message['role'] + '<|end_header_id|>\\n\\n'}}\n        {%- if message['content'] -%}\n            {{ message['content'] }}\n        {%- endif -%}\n        {%- if 'tool_calls' in message and message['tool_calls'] -%}\n            {%- for tool_call in message['tool_calls'] -%}\n                {%- if tool_call[\"function\"][\"name\"] == \"python\" -%}\n                    {{ '<|python_tag|>' + tool_call['function']['arguments'] }}\n                {%- else -%}\n                    {{ '<function=' + tool_call['function']['name'] + '>' + tool_call['function']['arguments'] + '</function>' }}\n                {%- endif -%}\n            {%- endfor -%}\n            {{ '<|eom_id|>' }}\n        {%- else -%}\n            {{ '<|eot_id|>' }}\n        {%- endif -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{ '<|start_header_id|>assistant<|end_header_id|>\\n\\n' }}\n{%- endif -%}",
-        "tool_use_grammar": lambda tools: f"""("<function=" {gbnf_or([gbnf_literal(tool["function"]["name"])+'">"'+gbnf_sanitize(tool["function"]["name"])+'-arguments' for tool in tools])} "</function>")""",
-        "no_tool_use_grammar": lambda: f"""{gbnf_not("<function=")}""",
-        "tool_use_regex": "^<function=([a-zA-Z0-9_-]+)>(.*)</function>",
-        "tool_use_parser": lambda regex: [
-            {"name": regex.groups()[0], "arguments": json.loads(regex.groups()[1])}
-        ],
-    },
+    # "allenai/OLMoE-1B-7B-0924-Instruct-GGUF": {
+    #    "filename": "olmoe-1b-7b-0924-instruct-q4_k_m.gguf",
+    #    "template": "{{ bos_token }}{% for message in messages %}\n{% if message['role'] == 'system' %}\n{{ '<|system|>\n' + message['content'] }}\n{% elif message['role'] == 'user' %}\n{{ '<|user|>\n' + message['content'] }}\n{% elif message['role'] == 'assistant' %}\n{{ '<|assistant|>\n'  + message['content'] + eos_token }}\n{% endif %}\n{% if loop.last and add_generation_prompt %}\n{{ '<|assistant|>' }}\n{% endif %}\n{% endfor %}",
+    #    "tool_use_grammar": lambda tools: f"""(.*)""",
+    #    "no_tool_use_grammar": lambda: f"""(.*)""",
+    #    "tool_use_regex": "^\\[TOOL_CALLS\\] (\\[.*\\])$",
+    #    "max_context": 4096,
+    # },
+    # "Salesforce/xLAM-1b-fc-r-gguf": {
+    #    "filename": "xLAM-1b-fc-r.Q4_K_M.gguf",
+    #    "template": "{% set system_message = 'You are an AI assistant for function calling.\\n' %}{% if messages[0]['role'] == 'system' %}{% set system_message = messages[0]['content'] %}{% endif %}{% if system_message is defined %}{{ system_message }}{% endif %}{% for message in messages %}{% set content = message['content'] %}{% if message['role'] == 'user' %}{{ '### Instruction:\\n' + content + '\\n### Response:' }}{% elif message['role'] == 'assistant' %}{{ '\\n' + content + '\\n<|EOT|>\\n' }}{% endif %}{% endfor %}",
+    #    "tool_use_grammar": lambda tools: f"""{gbnf_literal('{"tool_calls": [')} {gbnf_or([gbnf_sanitize(tool["function"]["name"]) for tool in tools])}  {gbnf_literal("]}")}""",
+    #    "no_tool_use_grammar": lambda: f"""{gbnf_not('{"tool_calls": [')}""",
+    #    "tool_use_regex": '^\\{"tool_calls": (\\[.*\\])\\}$',
+    #    # "max_context": 16384,
+    # },
+    # "bartowski/functionary-small-v3.1-GGUF": {
+    #    "filename": "functionary-small-v3.1-IQ4_XS.gguf",
+    #    "template": "{# version=v3-llama3.1 #}{%- if not tools is defined -%}\n    {%- set tools = none -%}\n{%- endif -%}\n\n{%- set has_code_interpreter = tools | selectattr(\"type\", \"equalto\", \"code_interpreter\") | list | length > 0 -%}\n{%- if has_code_interpreter -%}\n    {%- set tools = tools | rejectattr(\"type\", \"equalto\", \"code_interpreter\") | list -%}\n{%- endif -%}\n\n{#- System message + builtin tools #}\n{{- bos_token + \"<|start_header_id|>system<|end_header_id|>\\n\\n\" }}\n{%- if has_code_interpreter %}\n    {{- \"Environment: ipython\\n\\n\" }}\n{%- else -%}\n    {{ \"\\n\"}}\n{%- endif %}\n{{- \"Cutting Knowledge Date: December 2023\\n\\n\" }}\n{%- if tools %}\n    {{- \"\\nYou have access to the following functions:\\n\\n\" }}\n    {%- for t in tools %}\n        {%- if \"type\" in t -%}\n            {{ \"Use the function '\"|safe + t[\"function\"][\"name\"] + \"' to '\"|safe + t[\"function\"][\"description\"] + \"'\\n\"|safe + t[\"function\"] | tojson() }}\n        {%- else -%}\n            {{ \"Use the function '\"|safe + t[\"name\"] + \"' to '\"|safe + t[\"description\"] + \"'\\n\"|safe + t | tojson() }}\n        {%- endif -%}\n        {{- \"\\n\\n\" }}\n    {%- endfor %}\n    {{- '\\nThink very carefully before calling functions.\\nIf a you choose to call a function ONLY reply in the following format:\\n<{start_tag}={function_name}>{parameters}{end_tag}\\nwhere\\n\\nstart_tag => `<function`\\nparameters => a JSON dict with the function argument name as key and function argument value as value.\\nend_tag => `</function>`\\n\\nHere is an example,\\n<function=example_function_name>{\"example_name\": \"example_value\"}</function>\\n\\nReminder:\\n- If looking for real time information use relevant functions before falling back to brave_search\\n- Function calls MUST follow the specified format, start with <function= and end with </function>\\n- Required parameters MUST be specified\\n- Only call one function at a time\\n- Put the entire function call reply on one line\\n\\n' -}}\n{%- endif %}\n{{- \"<|eot_id|>\" -}}\n\n{%- for message in messages -%}\n    {%- if message['role'] == 'user' or message['role'] == 'system' -%}\n        {{ '<|start_header_id|>' + message['role'] + '<|end_header_id|>\\n\\n' + message['content'] + '<|eot_id|>' }}\n    {%- elif message['role'] == 'tool' -%}\n        {{ '<|start_header_id|>ipython<|end_header_id|>\\n\\n' + message['content'] + '<|eot_id|>' }}\n    {%- else -%}\n        {{ '<|start_header_id|>' + message['role'] + '<|end_header_id|>\\n\\n'}}\n        {%- if message['content'] -%}\n            {{ message['content'] }}\n        {%- endif -%}\n        {%- if 'tool_calls' in message and message['tool_calls'] -%}\n            {%- for tool_call in message['tool_calls'] -%}\n                {%- if tool_call[\"function\"][\"name\"] == \"python\" -%}\n                    {{ '<|python_tag|>' + tool_call['function']['arguments'] }}\n                {%- else -%}\n                    {{ '<function=' + tool_call['function']['name'] + '>' + tool_call['function']['arguments'] + '</function>' }}\n                {%- endif -%}\n            {%- endfor -%}\n            {{ '<|eom_id|>' }}\n        {%- else -%}\n            {{ '<|eot_id|>' }}\n        {%- endif -%}\n    {%- endif -%}\n{%- endfor -%}\n{%- if add_generation_prompt -%}\n    {{ '<|start_header_id|>assistant<|end_header_id|>\\n\\n' }}\n{%- endif -%}",
+    #    "tool_use_grammar": lambda tools: f"""("<function=" {gbnf_or([gbnf_literal(tool["function"]["name"])+'">"'+gbnf_sanitize(tool["function"]["name"])+'-arguments' for tool in tools])} "</function>")""",
+    #    "no_tool_use_grammar": lambda: f"""{gbnf_not("<function=")}""",
+    #    "tool_use_regex": "^<function=([a-zA-Z0-9_-]+)>(.*)</function>",
+    #    "tool_use_parser": lambda regex: [
+    #        {"name": regex.groups()[0], "arguments": json.loads(regex.groups()[1])}
+    #    ],
+    # },
 }
 
 
