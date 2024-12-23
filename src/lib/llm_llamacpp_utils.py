@@ -6,7 +6,7 @@ from typing import Callable, Dict, Iterator, List, Optional, Sequence, Tuple, Un
 import diskcache
 import jinja2
 from jinja2.sandbox import ImmutableSandboxedEnvironment, SandboxedEnvironment
-from llama_cpp import BaseLlamaCache, Llama, LlamaDiskCache, LlamaRAMCache
+from llama_cpp import BaseLlamaCache, Llama, LlamaRAMCache
 import llama_cpp as llama
 import llama_cpp
 from llama_cpp.llama_chat_format import Jinja2ChatFormatter
@@ -14,7 +14,7 @@ import llama_cpp.llama_types as llama_types
 import llama_cpp.llama_grammar as llama_grammar
 import html
 
-from .localLLMGrammarUtils import functions_to_gbnf
+from .llm_llamacpp_grammar import functions_to_gbnf
 
 
 def create_chat_completion_handler(

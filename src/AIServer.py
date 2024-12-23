@@ -4,9 +4,9 @@ from typing import TypedDict
 import soundfile as sf
 from pick import pick
 
-from lib.localSTT import init_stt, stt, stt_models_names
-from lib.localTTS import init_tts, tts, tts_model_names
-from lib.localLLM import init_llm, llm, llm_model_names
+from lib.stt import init_stt, stt, stt_models_names
+from lib.tts_sherpa import init_tts, tts, tts_model_names
+from lib.llm_llamacpp import init_llm, llm, llm_model_names
 
 
 class Config(TypedDict):

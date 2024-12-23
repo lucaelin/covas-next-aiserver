@@ -2,8 +2,8 @@ import json
 from typing import Optional
 from llama_cpp import Llama
 
-from .localLLMGrammarUtils import gbnf_literal, gbnf_not, gbnf_or, gbnf_sanitize
-from .localLLMUtils import create_chat_completion_handler, LlamaDiskCache
+from .llm_llamacpp_grammar import gbnf_literal, gbnf_not, gbnf_or, gbnf_sanitize
+from .llm_llamacpp_utils import create_chat_completion_handler, LlamaDiskCache
 
 import jinja2
 
@@ -29,9 +29,9 @@ smollm2_finetune_preset = {
 
 model_presets = {
     "lucaelin/llama-3.2-1b-instruct-cn-v2.1-1e-gguf": llama_finetune_preset,
-    "lucaelin/llama-3.2-1b-instruct-cn-g-1e-gguf": llama_finetune_preset,
+    # "lucaelin/llama-3.2-1b-instruct-cn-g-1e-gguf": llama_finetune_preset,
     "lucaelin/llama-3.2-3b-instruct-cn-v2.1-1e-gguf": llama_finetune_preset,
-    "lucaelin/llama-3.2-3b-instruct-cn-g-1e-gguf": llama_finetune_preset,
+    # "lucaelin/llama-3.2-3b-instruct-cn-g-1e-gguf": llama_finetune_preset,
     "lmstudio-community/Llama-3.2-1B-Instruct-GGUF": {
         **llama_finetune_preset,
         "filename": "Llama-3.2-1B-Instruct-Q8_0.gguf",
