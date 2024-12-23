@@ -160,9 +160,9 @@ def create_chat_completion_handler(
 
         grammar_str += "\nnotooluse ::= " + no_tool_use_grammar()
         if not tools or tool_choice == "none":
-            grammar_str += "\nroot ::= notooluse"
+            grammar_str += "\nroot ::= notooluse .*"
         elif tool_choice == "auto":
-            grammar_str += "\nroot ::= tooluse | notooluse"
+            grammar_str += "\nroot ::= tooluse | (notooluse .*)"
         elif tool_choice == "required":
             grammar_str += "\nroot ::= tooluse"
 
