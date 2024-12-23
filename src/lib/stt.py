@@ -50,7 +50,7 @@ def init_stt(model_name="distil-medium.en"):
 
         segments = []
         for segment in gen:
-            segments.append(segment)
+            segments.append(segment.text)
 
         return segments, info
 
