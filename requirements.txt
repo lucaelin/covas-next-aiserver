@@ -245,6 +245,7 @@ s3transfer==0.10.4
     # via boto3
 samplerate==0.2.1
     # via covas-next-aiserver (pyproject.toml)
+-f https://k2-fsa.github.io/sherpa/onnx/cpu.html
 sherpa-onnx==1.10.29
     # via covas-next-aiserver (pyproject.toml)
 six==1.17.0
