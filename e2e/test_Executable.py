@@ -36,6 +36,7 @@ def test_server_executable():
         bufsize=1,
         universal_newlines=True,
         encoding="utf-8",
+        errors="ignore",
         shell=False,
         close_fds=True,
     )
