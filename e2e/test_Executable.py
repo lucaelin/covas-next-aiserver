@@ -1,5 +1,7 @@
 import json
+import re
 import tempfile
+import requests
 
 default_config = {
     "host": "127.0.0.1",
@@ -38,7 +40,7 @@ def test_server_executable():
         close_fds=True,
     )
 
-    # read stdout until Chat.exe either exits or outputs "System Ready."
+    # read stdout until server outputs "Running"
     while proc.stdout:
         line = proc.stdout.readline()
         if not line:
@@ -47,8 +49,44 @@ def test_server_executable():
         if "Running on http://127.0.0.1:8080" in line:
             break
 
-    # assert that Chat.exe is running
-    assert proc.poll() is None
+    # test http api
+    # /chat/completions
+    response = requests.post(
+        "http://127.0.0.1:8080/chat/completions",
+        json={
+            "model": "lmstudio-community/Llama-3.2-1B-Instruct-GGUF",
+            "prompt": {
+                "messages": [{"role": "user", "content": "Hello, how are you?"}],
+                "max_tokens": 1,
+            },
+        },
+    )
+    assert response.status_code == 200
+    assert "choices" in response.json()
+    assert len(response.json()["choices"]) > 0
+    assert "message" in response.json()["choices"][0]
+    assert "content" in response.json()["choices"][0]["message"]
+    assert len(response.json()["choices"][0]["message"]["content"]) > 0
+
+    # /audio/speech
+    response = requests.post(
+        "http://127.0.0.1:8080/audio/speech",
+        json={"input": "Hello world.", "voice": "nova", "speed": 1.0},
+    )
+    assert response.status_code == 200
+    # save audio file to temp_dir
+    with open(f"{temp_dir}/audio.wav", "wb") as f:
+        f.write(response.content)
+
+    # /audio/transcriptions
+    response = requests.post(
+        "http://127.0.0.1:8080/audio/transcriptions",
+        files={"file": open(f"{temp_dir}/audio.wav", "rb")},
+    )
+    assert response.status_code == 200
+    transcription = response.json()
+    assert "text" in transcription
+    assert transcription["text"] == "Hello world."
 
     # terminate Chat.exe
     proc.kill()

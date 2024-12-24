@@ -157,7 +157,7 @@ model_presets = {
 }
 
 
-llm_model_names = ["None"] + list(model_presets.keys())
+llm_model_names = list(model_presets.keys())
 
 
 def init_llm(model_path: str, use_disk_cache: bool = False) -> Optional[Llama]:
