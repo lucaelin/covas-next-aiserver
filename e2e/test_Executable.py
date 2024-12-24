@@ -1,6 +1,7 @@
 import json
 import re
 import tempfile
+from time import sleep
 import requests
 
 default_config = {
@@ -52,16 +53,26 @@ def test_server_executable():
 
     # test http api
     # /chat/completions
-    response = requests.post(
-        "http://127.0.0.1:8080/chat/completions",
-        json={
-            "model": "lmstudio-community/Llama-3.2-1B-Instruct-GGUF",
-            "prompt": {
-                "messages": [{"role": "user", "content": "Hello, how are you?"}],
-                "max_tokens": 1,
-            },
-        },
-    )
+    response = None
+    while not response or not response.ok:
+        print("Testing /chat/completions")
+        sleep(3)
+        try:
+            response = requests.post(
+                "http://127.0.0.1:8080/chat/completions",
+                json={
+                    "model": "lmstudio-community/Llama-3.2-1B-Instruct-GGUF",
+                    "prompt": {
+                        "messages": [
+                            {"role": "user", "content": "Hello, how are you?"}
+                        ],
+                        "max_tokens": 1,
+                    },
+                },
+            )
+        except requests.exceptions.ConnectionError as e:
+            print(e)
+
     assert response.status_code == 200
     assert "choices" in response.json()
     assert len(response.json()["choices"]) > 0
@@ -70,6 +81,7 @@ def test_server_executable():
     assert len(response.json()["choices"][0]["message"]["content"]) > 0
 
     # /audio/speech
+    print("Testing /audio/speech")
     response = requests.post(
         "http://127.0.0.1:8080/audio/speech",
         json={"input": "Hello world.", "voice": "nova", "speed": 1.0},
@@ -80,6 +92,7 @@ def test_server_executable():
         f.write(response.content)
 
     # /audio/transcriptions
+    print("Testing /audio/transcriptions")
     response = requests.post(
         "http://127.0.0.1:8080/audio/transcriptions",
         files={"file": open(f"{temp_dir}/audio.wav", "rb")},
