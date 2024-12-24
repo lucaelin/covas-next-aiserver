@@ -1,79 +1,33 @@
-import io
-import time
 from faster_whisper import WhisperModel
-import samplerate
-import soundfile as sf
-import moonshine_onnx
-import numpy as np
-from functools import partial
-
-stt_models_names = [
-    "None",
-    "distil-medium.en",
-    "distil-small.en",
-    "tiny",
-    "tiny.en",
-    "base",
-    "base.en",
-    "small",
-    "small.en",
-    "medium",
-    "medium.en",
-    "large-v1",
-    "large-v2",
-    "large-v3",
-    "large",
-    "distil-large-v2",
-    "distil-large-v3",
-    "deepdml/faster-whisper-large-v3-turbo-ct2",
-    "moonshine/tiny",
-    "moonshine/base",
-]
+from .stt_fasterwhisper import init_stt, stt, stt_model_names
+from .stt_moonshine import (
+    init_stt as init_moonshine,
+    stt as stt_moonshine,
+    stt_model_names as moonshine_model_names,
+)
 
 
-def init_stt(model_name="distil-medium.en"):
+stt_model_names = ["None"] + stt_model_names + moonshine_model_names
+
+
+def init_stt(model_name="None"):
     if model_name == "None":
         return None
 
-    if model_name.startswith("moonshine/"):
+    if model_name in stt_model_names:
+        model = init_stt(model_name)
+        return model
 
-        def transcribe(audio, language):
-            text = moonshine_onnx.transcribe(audio, model=model_name)
-            return text, {}
+    if model_name in moonshine_model_names:
+        model = init_moonshine(model_name)
+        return model
 
-        return transcribe
-
-    model = WhisperModel(model_name, device="cpu", compute_type="int8")
-
-    def transcribe(audio, language):
-        gen, info = model.transcribe(audio, language=language, beam_size=4)
-
-        segments = []
-        for segment in gen:
-            segments.append(segment.text)
-
-        return segments, info
-
-    return transcribe
+    return None
 
 
-def stt(transcribe, wav: bytes, language="en-US"):
-    # convert wav bytes to 16k S16_LE
+def stt(model, wav: bytes, language="en-US"):
 
-    start = time.time()
-    audio, rate = sf.read(io.BytesIO(wav))
-    end = time.time()
-    print("Read time:", end - start)
-    start = time.time()
-    audio = samplerate.resample(audio, 16000 / rate, "sinc_best")
-    end = time.time()
-    print("Resample time:", end - start)
-
-    start = time.time()
-
-    segments, info = transcribe(audio, language=language)
-
-    end = time.time()
-    print("Transcribe time:", end - start)
-
-    return segments, info
+    if isinstance(model, WhisperModel):
+        return stt(model, wav, language)
+    else:
+        return stt_moonshine(model, wav, language)

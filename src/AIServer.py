@@ -4,9 +4,9 @@ from typing import TypedDict
 import soundfile as sf
 from pick import pick
 
-from lib.stt import init_stt, stt, stt_models_names
-from lib.tts_sherpa import init_tts, tts, tts_model_names
-from lib.llm_llamacpp import init_llm, llm, llm_model_names
+from lib.stt_fasterwhisper import init_stt, stt, stt_model_names
+from lib.tts import init_tts, tts, tts_model_names
+from lib.llm import init_llm, llm, llm_model_names
 
 
 class Config(TypedDict):
@@ -35,7 +35,7 @@ def load_config() -> Config:
 
     if not "stt_model_name" in config:
         config["stt_model_name"] = pick(
-            options=stt_models_names, title="Select a STT model"
+            options=stt_model_names, title="Select a STT model"
         )[0]
 
     if not "llm_model_name" in config:

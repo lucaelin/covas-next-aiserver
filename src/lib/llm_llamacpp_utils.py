@@ -1,8 +1,9 @@
 import json
+from pydoc import doc
 import re
 import sys
 import time
-from typing import Callable, Dict, Iterator, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Iterator, List, Optional, Sequence, Tuple, Union
 import diskcache
 import jinja2
 from jinja2.sandbox import ImmutableSandboxedEnvironment, SandboxedEnvironment
@@ -40,6 +41,7 @@ def create_chat_completion_handler(
         function_call: Optional[llama_types.ChatCompletionRequestFunctionCall] = None,
         tools: Optional[List[llama_types.ChatCompletionTool]] = None,
         tool_choice: Optional[llama_types.ChatCompletionToolChoiceOption] = None,
+        documents: Optional[List[Any]] = None,
         temperature: float = 0.2,
         top_p: float = 0.95,
         top_k: int = 40,
@@ -92,19 +94,22 @@ def create_chat_completion_handler(
 
         original_message_count = len(messages)
         while True:
+            variables: dict[str, Any] = {
+                "messages": messages,
+                "controls": None,
+            }
+            if tools:
+                variables["functions"] = [
+                    tool["function"] for tool in tools if "function" in tool
+                ]
+                variables["tool_choice"] = tool_choice if tool_choice else "auto"
+                variables["tools"] = tools
+            if documents:
+                variables["documents"] = documents
+
             result = jinja_template.render(
                 add_generation_prompt=True,
-                messages=messages,
-                functions=(
-                    [tool["function"] for tool in tools if "function" in tool]
-                    if tools
-                    else None
-                ),
-                function_call=function_call,
-                controls=None,
-                documents=None,
-                tools=tools,
-                tool_choice=tool_choice,
+                **variables,
                 eos_token=eos_token_set,
                 bos_token=bos_token_set,
             )
@@ -228,7 +233,7 @@ def create_chat_completion_handler(
             if token in stop_tokens:
                 stop_reason = "stop"
                 break
-            if len(generated_tokens) > max_tokens:
+            if len(generated_tokens) >= max_tokens:
                 stop_reason = "length"
                 break
             generated_tokens.append(token)

@@ -26,11 +26,15 @@ jobs:
           $Env:PYINSTALLER_COMPILE_BOOTLOADER = "true"
           pip install --force-reinstall --ignore-installed --no-binary :all: pyinstaller==6.10.0
 
-      - name: Install llamacpp with OpenBLAS support
+      - name: Install llamacpp
         run: |
           pip install --upgrade pip setuptools
           pip uninstall -y llama-cpp-python
           pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.3.2 numpy==1.25.2
+
+      - name: Run tests
+        run: |
+          python -m pytest test -v
 
       - name: Determine paths for dependencies
         run: |
@@ -56,6 +60,10 @@ jobs:
           name: AIServer_v${{ github.sha }}
           path: ./dist
           compression-level: 0 # no compression
+
+      - name: Run e2e tests
+        run: |
+          python e2e/test_Executable.py
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v2
