@@ -1,14 +1,9 @@
 import json
-from typing import Optional
 from llama_cpp import Llama
 
-from .llm_llamacpp_grammar import gbnf_literal, gbnf_not, gbnf_or, gbnf_sanitize
+from .llm_llamacpp_grammar import gbnf_not, gbnf_or, gbnf_sanitize
 from .llm_llamacpp_utils import create_chat_completion_handler, LlamaDiskCache
 
-import jinja2
-
-jinja2.filters.FILTERS["fromjson"] = lambda s: json.loads(s)
-jinja2.filters.FILTERS["from_json"] = lambda s: json.loads(s)
 
 llama_finetune_preset = {
     "filename": "unsloth.Q8_0.gguf",
@@ -160,7 +155,7 @@ model_presets = {
 llm_model_names = list(model_presets.keys())
 
 
-def init_llm(model_path: str, use_disk_cache: bool = False) -> Optional[Llama]:
+def init_llm(model_path: str, use_disk_cache: bool = False) -> Llama | None:
     if model_path == "None":
         return None
 

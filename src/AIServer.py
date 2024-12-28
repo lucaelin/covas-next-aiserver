@@ -4,7 +4,7 @@ from typing import TypedDict
 import soundfile as sf
 from pick import pick
 
-from lib.stt_fasterwhisper import init_stt, stt, stt_model_names
+from lib.stt import init_stt, stt, stt_model_names
 from lib.tts import init_tts, tts, tts_model_names
 from lib.llm import init_llm, llm, llm_model_names
 

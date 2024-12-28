@@ -3,9 +3,6 @@ import time
 from faster_whisper import WhisperModel
 import samplerate
 import soundfile as sf
-import moonshine_onnx
-import numpy as np
-from functools import partial
 
 stt_model_names = [
     "distil-medium.en",

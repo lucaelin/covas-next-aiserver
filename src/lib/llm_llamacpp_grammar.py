@@ -1,7 +1,4 @@
 from llama_cpp import llama_grammar
-from llama_cpp import llama_grammar
-import json
-from typing import Optional
 
 
 def gbnf_char(char: str):
