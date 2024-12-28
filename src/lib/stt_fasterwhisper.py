@@ -1,11 +1,5 @@
 import io
 import time
-from faster_whisper import WhisperModel
-import samplerate
-import soundfile as sf
-import moonshine_onnx
-import numpy as np
-from functools import partial
 
 stt_model_names = [
     "distil-medium.en",
@@ -29,6 +23,8 @@ stt_model_names = [
 
 
 def init_stt(model_name="distil-medium.en"):
+    from faster_whisper import WhisperModel
+
     if model_name == "None":
         return None
 
@@ -38,6 +34,9 @@ def init_stt(model_name="distil-medium.en"):
 
 
 def stt(model, wav: bytes, language="en-US"):
+    import samplerate
+    import soundfile as sf
+
     # convert wav bytes to 16k S16_LE
 
     start = time.time()

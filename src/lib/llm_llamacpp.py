@@ -1,14 +1,10 @@
 import json
-from typing import Optional
-from llama_cpp import Llama
+from typing import TYPE_CHECKING
 
-from .llm_llamacpp_grammar import gbnf_literal, gbnf_not, gbnf_or, gbnf_sanitize
-from .llm_llamacpp_utils import create_chat_completion_handler, LlamaDiskCache
+if TYPE_CHECKING:
+    import llama_cpp
 
-import jinja2
-
-jinja2.filters.FILTERS["fromjson"] = lambda s: json.loads(s)
-jinja2.filters.FILTERS["from_json"] = lambda s: json.loads(s)
+from .llm_llamacpp_grammar import gbnf_not, gbnf_or, gbnf_sanitize
 
 llama_finetune_preset = {
     "filename": "unsloth.Q8_0.gguf",
@@ -160,9 +156,9 @@ model_presets = {
 llm_model_names = list(model_presets.keys())
 
 
-def init_llm(model_path: str, use_disk_cache: bool = False) -> Optional[Llama]:
-    if model_path == "None":
-        return None
+def init_llm(model_path: str, use_disk_cache: bool = False) -> "llama_cpp.Llama":
+    from llama_cpp import Llama
+    from .llm_llamacpp_utils import create_chat_completion_handler, LlamaDiskCache
 
     model_preset = model_presets.get(model_path)
     llm = Llama.from_pretrained(
@@ -187,8 +183,7 @@ def init_llm(model_path: str, use_disk_cache: bool = False) -> Optional[Llama]:
     return llm
 
 
-def llm(model: Llama, prompt):
-
+def llm(model: "llama_cpp.Llama", prompt):
     messages = prompt.get("messages")
 
     # deduplicate messages with consecutive roles, this is required for some models, but not finetuned ones

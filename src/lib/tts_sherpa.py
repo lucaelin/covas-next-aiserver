@@ -1,8 +1,10 @@
+from re import I
 import time
+from typing import TYPE_CHECKING
 from cached_path import cached_path
-import numpy as np
-import sherpa_onnx
-import samplerate
+
+if TYPE_CHECKING:
+    import sherpa_onnx
 
 tts_model_names = [
     "None",
@@ -207,6 +209,8 @@ tts_model_names = [
 
 
 def init_tts(asset: str = "vits-piper-en_US-ljspeech-high.tar.bz2"):
+    import sherpa_onnx
+
     if asset == "None":
         return
 
@@ -253,8 +257,11 @@ def init_tts(asset: str = "vits-piper-en_US-ljspeech-high.tar.bz2"):
 
 
 def tts(
-    model: sherpa_onnx.OfflineTts, text: str, speed: float = 1.0, voice: str = "nova"
+    model: "sherpa_onnx.OfflineTts", text: str, speed: float = 1.0, voice: str = "nova"
 ):
+    import numpy as np
+    import samplerate
+
     def generated_audio_callback(samples: np.ndarray, progress: float):
         print(f"Generated audio with {len(samples)} samples, progress: {progress:.2f}")
         # 1 means to keep generating
