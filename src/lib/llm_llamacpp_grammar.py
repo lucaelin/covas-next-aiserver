@@ -1,5 +1,7 @@
-from typing import Any
 from llama_cpp import llama_grammar
+from llama_cpp import llama_grammar
+import json
+from typing import Optional
 
 
 def gbnf_char(char: str):
@@ -59,7 +61,7 @@ def gbnf_not(str: str):
     return "(" + " | ".join(rules) + ")"
 
 
-def functions_to_gbnf(functions: list[dict[str, Any]]):
+def functions_to_gbnf(functions: list[dict[str, any]]):
     prop_order = []
     prop_order = {name: idx for idx, name in enumerate(prop_order)}
     converter = llama_grammar.SchemaConverter(

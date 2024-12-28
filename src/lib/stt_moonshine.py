@@ -1,5 +1,11 @@
 import io
 import time
+from faster_whisper import WhisperModel
+import samplerate
+import soundfile as sf
+import moonshine_onnx
+import numpy as np
+from functools import partial
 
 stt_model_names = [
     "moonshine/tiny",
@@ -8,7 +14,6 @@ stt_model_names = [
 
 
 def init_stt(model_name="moonshine/base"):
-    import moonshine_onnx
 
     def transcribe(audio, language):
         segments = moonshine_onnx.transcribe(audio, model=model_name)
@@ -18,9 +23,6 @@ def init_stt(model_name="moonshine/base"):
 
 
 def stt(transcribe, wav: bytes, language="en-US"):
-    import samplerate
-    import soundfile as sf
-
     # convert wav bytes to 16k S16_LE
 
     start = time.time()
