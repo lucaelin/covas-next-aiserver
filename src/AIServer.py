@@ -4,6 +4,7 @@ from typing import TypedDict
 import soundfile as sf
 from pick import pick
 
+from lib.embed import init_embed, embed, embed_model_names
 from lib.stt import init_stt, stt, stt_model_names
 from lib.tts import init_tts, tts, tts_model_names
 from lib.llm import init_llm, llm, llm_model_names
@@ -13,6 +14,7 @@ class Config(TypedDict):
     tts_model_name: str
     stt_model_name: str
     llm_model_name: str
+    embed_model_name: str
     use_disk_cache: bool
     host: str
     port: int
@@ -52,6 +54,11 @@ def load_config() -> Config:
             == "Enabled"
         )
 
+    if not "embed_model_name" in config:
+        config["embed_model_name"] = pick(
+            options=embed_model_names, title="Select an Embedding model"
+        )[0]
+
     if not "host" in config:
         config["host"] = (
             input("Enter the IP to bind or leave empty for default [127.0.0.1]: ")
@@ -70,6 +77,7 @@ def load_config() -> Config:
     print(f'Selected STT model: {config["stt_model_name"]}')
     print(f'Selected LLM model: {config["llm_model_name"]}')
     print(f'Selected TTS model: {config["tts_model_name"]}')
+    print(f'Selected Embedding model: {config["embed_model_name"]}')
     return config
 
 
@@ -78,6 +86,7 @@ config = load_config()
 llm_model = init_llm(config["llm_model_name"], config["use_disk_cache"])
 tts_model = init_tts(config["tts_model_name"])
 stt_model = init_stt(config["stt_model_name"])
+embed_model = init_embed(config["embed_model_name"])
 
 # create flask api endpoint
 from flask import Flask, request, jsonify
@@ -152,6 +161,17 @@ def createTranscription():
     text, info = stt(stt_model, file.stream.read(), language)
     # text = "".join([segment.text for segment in segments])
     return jsonify({"text": "\n".join(text)})  # TODO more details, spec compliance
+
+
+@app.route("/v1/embeddings", methods=["POST"])
+@app.route("/embeddings", methods=["POST"])
+def createEmbedding():
+    data = request.json
+    if not data or not data.get("input"):
+        return jsonify({"error": "input is required"}), 400
+
+    embedding = embed(embed_model, data)
+    return jsonify(embedding)
 
 
 if __name__ == "__main__":
