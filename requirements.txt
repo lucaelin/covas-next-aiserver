@@ -267,6 +267,7 @@ tqdm==4.67.1
     # via
     #   huggingface-hub
     #   openai
+transformers==4.47.1
 typing-extensions==4.12.2
     # via
     #   anyio
