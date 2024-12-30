@@ -34,7 +34,7 @@ botocore==1.35.74
     # via
     #   boto3
     #   s3transfer
-cached-path==1.6.4
+cached-path==1.6.6
     # via covas-next-aiserver (pyproject.toml)
 cachetools==5.5.0
     # via google-auth
@@ -115,7 +115,7 @@ httpx==0.27.0
     # via
     #   covas-next-aiserver (pyproject.toml)
     #   openai
-huggingface-hub==0.23.5
+huggingface-hub==0.26.5
     # via
     #   cached-path
     #   covas-next-aiserver (pyproject.toml)
