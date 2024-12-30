@@ -1,8 +1,8 @@
 import json
-import re
 import tempfile
 from time import sleep
 import requests
+from openai import OpenAI
 
 default_config = {
     "host": "127.0.0.1",
@@ -10,6 +10,7 @@ default_config = {
     "tts_model_name": "vits-piper-en_US-ljspeech-high.tar.bz2",
     "stt_model_name": "tiny.en",
     "llm_model_name": "lmstudio-community/Llama-3.2-1B-Instruct-GGUF",
+    "embed_model_name": "lmstudio-community/granite-embedding-107m-multilingual-GGUF",
     "use_disk_cache": False,
 }
 
@@ -66,55 +67,52 @@ def test_server_executable():
     t2 = threading.Thread(target=read_output, args=(proc.stderr,))
     t2.start()
 
+    openai = OpenAI(base_url="http://127.0.0.1:8080", api_key="-")
+
     # test http api
     # /chat/completions
     response = None
-    while not response or not response.ok:
+    while not response:
         print("Testing /chat/completions")
         sleep(3)
         try:
-            response = requests.post(
-                "http://127.0.0.1:8080/chat/completions",
-                json={
-                    "model": "lmstudio-community/Llama-3.2-1B-Instruct-GGUF",
-                    "messages": [{"role": "user", "content": "Hello, how are you?"}],
-                    "max_tokens": 1,
-                },
+            response = openai.chat.completions.create(
+                model="lmstudio-community/Llama-3.2-1B-Instruct-GGUF",
+                messages=[{"role": "user", "content": "Hello, how are you?"}],
+                max_tokens=1,
             )
             print(response)
-            print(response.text)
+            print(response.choices[0].message.content)
         except requests.exceptions.ConnectionError as e:
             print(e)
 
-    assert response.status_code == 200
-    assert "choices" in response.json()
-    assert len(response.json()["choices"]) > 0
-    assert "message" in response.json()["choices"][0]
-    assert "content" in response.json()["choices"][0]["message"]
-    assert len(response.json()["choices"][0]["message"]["content"]) > 0
+    assert isinstance(response.choices[0].message.content, str)
+    assert len(response.choices[0].message.content) > 0
 
     # /audio/speech
     print("Testing /audio/speech")
-    response = requests.post(
-        "http://127.0.0.1:8080/audio/speech",
-        json={"input": "Hello world.", "voice": "nova", "speed": 1.0},
+    response = openai.audio.speech.create(
+        model="-", input="Hello world.", voice="nova", speed=1.0, response_format="wav"
     )
-    assert response.status_code == 200
-    # save audio file to temp_dir
+
+    assert isinstance(response.content, bytes)
+    assert len(response.content) > 0
+    assert response.content[:4] == b"RIFF"
     with open(f"{temp_dir}/audio.wav", "wb") as f:
         f.write(response.content)
 
     # /audio/transcriptions
     print("Testing /audio/transcriptions")
-    response = requests.post(
-        "http://127.0.0.1:8080/audio/transcriptions",
-        files={"file": open(f"{temp_dir}/audio.wav", "rb")},
+    response = openai.audio.transcriptions.create(
+        model="-", file=open(f"{temp_dir}/audio.wav", "rb")
     )
-    assert response.status_code == 200
-    transcription = response.json()
-    print(transcription)
-    assert "text" in transcription
-    assert len(transcription["text"]) > 0
+    assert isinstance(response.text, str)
+    assert len(response.text) > 0
+
+    response = openai.embeddings.create(model="-", input="Hello, world!")
+    assert isinstance(response.data[0].embedding, list)
+    assert len(response.data[0].embedding) > 0
+    assert all(isinstance(x, float) for x in response.data[0].embedding)
 
     # terminate Chat.exe
     proc.kill()
