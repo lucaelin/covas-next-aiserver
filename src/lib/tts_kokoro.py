@@ -32,29 +32,7 @@ def init_tts(asset: str = "hexgrad/Kokoro-82M"):
         voices = f.read()
         print(json.loads(voices).keys())
 
-    # find espeak lib and data path for pyinstaller in frozen mode
-    if hasattr(sys, "frozen"):
-        ext = (
-            ".dll"
-            if platform.system() == "Windows"
-            else ".so" if platform.system() == "Linux" else ".dylib"
-        )
-        lib_name = (
-            "espeak-ng" + ext
-            if platform.system() == "Windows"
-            else "libespeak-ng" + ext
-        )
-        espeak_lib_path = os.path.join(sys._MEIPASS, "espeakng_loader", lib_name)
-        espeak_data_path = os.path.join(
-            sys._MEIPASS, "espeakng_loader", "espeak-ng-data"
-        )
-        espeak_config = EspeakConfig(
-            lib_path=espeak_lib_path, data_path=espeak_data_path
-        )
-        print("using bundled espeak-ng", espeak_lib_path, espeak_data_path)
-        kokoro = Kokoro(model_path, voices_path, espeak_config)
-    else:
-        kokoro = Kokoro(model_path, voices_path)
+    kokoro = Kokoro(model_path, voices_path)
 
     # dry run
     print("Warming up Kokoro...")
