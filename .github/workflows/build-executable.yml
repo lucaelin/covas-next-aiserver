@@ -85,7 +85,11 @@ jobs:
           $Env:CMAKE_ARGS = "-DGGML_VULKAN=on"
           pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.3.2 numpy==1.25.2
 
-      - name: Create Executable for AIServer with llamacpp[vulkan]
+      - name: Install onnxruntime with DirectML support
+        run: |
+          pip install onnxruntime-directml
+
+      - name: Create Executable for AIServer with llamacpp[vulkan] and onnxruntime[directml]
         run: |
           pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --collect-all language_tags --collect-all espeakng_loader --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
 
