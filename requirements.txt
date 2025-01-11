@@ -143,6 +143,7 @@ kthread==0.2.3
     # via covas-next-aiserver (pyproject.toml)
 #llama-cpp-python==0.3.2
     # via covas-next-aiserver (pyproject.toml)
+kokoro-onnx==0.2.5
 markdown-it-py==3.0.0
     # via rich
 markupsafe==3.0.2

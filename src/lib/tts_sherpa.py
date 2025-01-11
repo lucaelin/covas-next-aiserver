@@ -286,4 +286,4 @@ def tts(
     )
     audio.sample_rate = 24000
 
-    return audio
+    return (audio.samples, audio.sample_rate)

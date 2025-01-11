@@ -112,7 +112,7 @@ def createChatCompletion():
 @app.route("/v1/audio/speech", methods=["POST"])
 @app.route("/audio/speech", methods=["POST"])
 def createSpeech():
-    data = request.json
+    data: dict = request.json
 
     voice = data.get("voice")
     input = data.get("input")
@@ -120,7 +120,10 @@ def createSpeech():
         return jsonify({"error": "input is required"}), 400
     speed = float(data.get("speed", 1.0))
 
-    audio = tts(tts_model, input, speed, voice)
+    if not tts_model:
+        return jsonify({"error": "model not found"}), 404
+
+    (samples, samplerate) = tts(tts_model, input, speed, voice)
 
     response_format = data.get("response_format", "wav")
     if response_format == "pcm":
@@ -128,18 +131,14 @@ def createSpeech():
 
         buffer = io.BytesIO()
         buffer.name = "audio.pcm"
-        sf.write(
-            buffer, audio.samples, audio.sample_rate, subtype="PCM_16", format="RAW"
-        )
+        sf.write(buffer, samples, samplerate, subtype="PCM_16", format="RAW")
         buffer.seek(0)
         return buffer.read()
 
     elif response_format == "wav":
         buffer = io.BytesIO()
         buffer.name = "audio.wav"
-        sf.write(
-            buffer, audio.samples, audio.sample_rate, subtype="PCM_16", format="WAV"
-        )
+        sf.write(buffer, samples, samplerate, subtype="PCM_16", format="WAV")
         buffer.seek(0)
         return buffer.read()
 
