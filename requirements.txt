@@ -168,7 +168,7 @@ numpy==1.25.2
     #   onnxruntime
     #   pysilero-vad
     #   samplerate
-onnxruntime==1.18.1
+onnxruntime==1.20.1
     # via
     #   covas-next-aiserver (pyproject.toml)
     #   faster-whisper
