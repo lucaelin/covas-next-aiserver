@@ -1,9 +1,12 @@
+import os
+import platform
+import sys
 import time
 from tracemalloc import start
 from typing import Tuple
 from cached_path import cached_path
 import numpy as np
-from kokoro_onnx import Kokoro
+from kokoro_onnx import EspeakConfig, Kokoro
 import samplerate
 
 tts_model_names = [
@@ -17,10 +20,10 @@ def init_tts(asset: str = "hexgrad/Kokoro-82M"):
 
     model_path = cached_path(
         "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/kokoro-v0_19.onnx"
-    )
+    ).as_posix()
     voices_path = cached_path(
         "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/voices.json"
-    )
+    ).as_posix()
 
     # print voices
     with open(voices_path, "r") as f:
@@ -29,7 +32,29 @@ def init_tts(asset: str = "hexgrad/Kokoro-82M"):
         voices = f.read()
         print(json.loads(voices).keys())
 
-    kokoro = Kokoro(model_path, voices_path)
+    # find espeak lib and data path for pyinstaller in frozen mode
+    if hasattr(sys, "frozen"):
+        ext = (
+            ".dll"
+            if platform.system() == "Windows"
+            else ".so" if platform.system() == "Linux" else ".dylib"
+        )
+        lib_name = (
+            "espeak-ng" + ext
+            if platform.system() == "Windows"
+            else "libespeak-ng" + ext
+        )
+        espeak_lib_path = os.path.join(sys._MEIPASS, "espeakng_loader", lib_name)
+        espeak_data_path = os.path.join(
+            sys._MEIPASS, "espeakng_loader", "espeak-ng-data"
+        )
+        espeak_config = EspeakConfig(
+            lib_path=espeak_lib_path, data_path=espeak_data_path
+        )
+        print("using bundled espeak-ng", espeak_lib_path, espeak_data_path)
+        kokoro = Kokoro(model_path, voices_path, espeak_config)
+    else:
+        kokoro = Kokoro(model_path, voices_path)
 
     # dry run
     print("Warming up Kokoro...")
