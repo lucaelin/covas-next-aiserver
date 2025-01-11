@@ -31,6 +31,15 @@ def init_tts(asset: str = "hexgrad/Kokoro-82M"):
 
     kokoro = Kokoro(model_path, voices_path)
 
+    # dry run
+    print("Warming up Kokoro...")
+    kokoro.create(
+        "Hello World",
+        voice="af",
+        speed=1.2,
+        lang="en-us",
+    )
+
     return (asset, kokoro)
 
 

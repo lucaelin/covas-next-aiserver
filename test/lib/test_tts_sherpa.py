@@ -16,9 +16,8 @@ def test_tts():
 
     """ test that the model can generate audio """
     prompt = "hello there"
-    result = tts(model, prompt)
-    print(result)
-    assert result.sample_rate == 24000
-    assert len(result.samples) > 12000  # at least 0.5 seconds
+    (samples, samplerate) = tts(model, prompt)
+    assert samplerate == 24000
+    assert len(samples) > 12000  # at least 0.5 seconds
     # not all zeros
-    assert any([x != 0 for x in result.samples])
+    assert any([x != 0 for x in samples])
