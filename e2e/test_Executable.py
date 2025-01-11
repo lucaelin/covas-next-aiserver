@@ -49,7 +49,7 @@ def test_server_executable():
         if not line:
             break
         print(line)
-        if "Running on http://127.0.0.1:8080" in line:
+        if "running on http://127.0.0.1:8080" in line:
             break
 
     # read and print the rest of the output in a thread

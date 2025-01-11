@@ -1,5 +1,6 @@
 from sherpa_onnx import OfflineTts
 from src.lib.tts_sherpa import init_tts, tts, tts_model_names
+import pytest
 
 
 def test_model_list():
@@ -8,7 +9,8 @@ def test_model_list():
     assert all(isinstance(model, str) for model in tts_model_names)
 
 
-def test_tts():
+@pytest.mark.asyncio
+async def test_tts():
     """Test that the TTS model can be initialized using vits-piper-en_US-ljspeech-high.tar.bz2"""
     model = init_tts("vits-piper-en_US-ljspeech-high.tar.bz2")
     assert model is not None
@@ -16,8 +18,14 @@ def test_tts():
 
     """ test that the model can generate audio """
     prompt = "hello there"
-    (samples, samplerate) = tts(model, prompt)
+    stream = tts(model, prompt)
+    audio = []
+    samplerate = 0
+    async for samples, rate in stream:
+        audio.extend(samples)
+        samplerate = rate
+
     assert samplerate == 24000
-    assert len(samples) > 12000  # at least 0.5 seconds
+    assert len(audio) > 12000  # at least 0.5 seconds
     # not all zeros
-    assert any([x != 0 for x in samples])
+    assert any([x != 0 for x in audio])

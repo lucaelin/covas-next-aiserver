@@ -1,12 +1,8 @@
-import os
-import platform
-import sys
 import time
-from tracemalloc import start
-from typing import Tuple
+from typing import AsyncGenerator
 from cached_path import cached_path
 import numpy as np
-from kokoro_onnx import EspeakConfig, Kokoro
+from kokoro_onnx import Kokoro
 import samplerate
 
 tts_model_names = [
@@ -46,31 +42,31 @@ def init_tts(asset: str = "hexgrad/Kokoro-82M"):
     return (asset, kokoro)
 
 
-def tts(model: Tuple[str, Kokoro], text: str, speed: float = 1.2, voice: str = "af"):
+async def tts(
+    model: tuple[str, Kokoro], text: str, speed: float = 1.2, voice: str = "af"
+) -> AsyncGenerator[tuple[np.ndarray, int], None]:
     start = time.time()
-    samples, sample_rate = model[1].create(
+    stream = model[1].create_stream(
         text,
         voice=voice,
         speed=speed,
         lang="en-us",
     )
+
+    num_samples = 0
+    async for samples, sample_rate in stream:
+        samples = samplerate.resample(samples, 24000 / sample_rate, "sinc_best")
+        sample_rate = 24000
+        num_samples += len(samples)
+        print(f"tts streaming: {len(samples)}")
+        yield (samples, sample_rate)
     end = time.time()
 
-    if len(samples) == 0:
-        print("Error in generating audios. Please read previous error messages.")
-        exit(1)
-
     elapsed_seconds = end - start
-    audio_duration = len(samples) / sample_rate
+    audio_duration = num_samples / 24000
     real_time_factor = elapsed_seconds / audio_duration
 
     print(f"The text is '{text}'")
     print(f"Elapsed seconds: {elapsed_seconds:.3f}")
     print(f"Audio duration in seconds: {audio_duration:.3f}")
     print(f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}")
-
-    # resample audio.samples to 24kHz to match openai
-    samples = samplerate.resample(samples, 24000 / sample_rate, "sinc_best")
-    sample_rate = 24000
-
-    return (samples, sample_rate)
