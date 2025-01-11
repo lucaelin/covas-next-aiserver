@@ -9,4 +9,4 @@ export LLAMACPP_DLL="/home/luca/.pyenv/versions/3.10.14/envs/aiserver/lib/python
 
 echo $ONNXRUNTIME_DLL
 echo $LLAMACPP_DLL
-pyinstaller ./src/AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --collect-all language_tags --add-binary $ONNXRUNTIME_DLL:. --add-binary $LLAMACPP_DLL:./llama_cpp/lib
+pyinstaller ./src/AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --collect-all language_tags --collect-all espeakng_loader --add-binary $ONNXRUNTIME_DLL:. --add-binary $LLAMACPP_DLL:./llama_cpp/lib
