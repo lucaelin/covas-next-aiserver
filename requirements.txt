@@ -215,9 +215,9 @@ pydantic-core==2.23.3
     #   pydantic
 pygments==2.18.0
     # via rich
-pyinstaller==6.9.0
+pyinstaller==6.10.0
     # via covas-next-aiserver (pyproject.toml)
-pyinstaller-hooks-contrib==2024.7
+pyinstaller-hooks-contrib==2024.11
     # via
     #   covas-next-aiserver (pyproject.toml)
     #   pyinstaller

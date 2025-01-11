@@ -56,7 +56,7 @@ jobs:
 
       - name: Create Executable for AIServer
         run: |
-          pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
+          pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --collect-all language_tags --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -87,7 +87,7 @@ jobs:
 
       - name: Create Executable for AIServer with llamacpp[vulkan]
         run: |
-          pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
+          pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --collect-all language_tags --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
