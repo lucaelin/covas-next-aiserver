@@ -90,16 +90,12 @@ jobs:
           pip uninstall -y onnxruntime
           pip install onnxruntime-directml==1.20.1
 
-      - name: Determine paths for dependencies with Vulkan and DirectML
+      - name: Determine paths for onnxruntime with DirectML
         run: |
           $ONNXRUNTIME_DLL = python -c 'import os, onnxruntime; print(os.path.join(os.path.dirname(onnxruntime.__file__), "capi", "onnxruntime_providers_shared.dll"))'
           $DIRECTML_DLL = python -c 'import os, onnxruntime; print(os.path.join(os.path.dirname(onnxruntime.__file__), "capi", "DirectML.dll"))'
-          $LLAMACPP_DLL = python -c 'import os, llama_cpp; print(os.path.join(os.path.dirname(llama_cpp.__file__), "lib", "llama.dll"))'
           echo "ONNXRUNTIME_DLL=$ONNXRUNTIME_DLL" >> $env:GITHUB_ENV
           echo "DIRECTML_DLL=$DIRECTML_DLL" >> $env:GITHUB_ENV
-          echo "LLAMACPP_DLL=$LLAMACPP_DLL" >> $env:GITHUB_ENV
-          python -c 'import onnxruntime; print("onnxruntime path:", onnxruntime.__file__)'
-          python -c 'import llama_cpp; print("llama_cpp path:", llama_cpp.__file__)'
 
       - name: Create Executable for AIServer with llamacpp[vulkan] and onnxruntime[directml]
         run: |
