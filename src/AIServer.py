@@ -1,4 +1,3 @@
-import io
 import json
 from typing import TypedDict
 
@@ -24,7 +23,7 @@ class Config(TypedDict):
 
 
 def load_config() -> Config:
-    config: Config = {}
+    config: dict | Config = {}
     try:
         with open("aiserver.config.json", "r") as f:
             config = Config(**json.load(f))

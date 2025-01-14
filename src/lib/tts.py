@@ -31,11 +31,11 @@ def init_tts(model_name="None"):
 
 
 async def audio_stream_generator(stream, response_format):
-    if response_format not in ["wav", "raw"]:
+    if response_format not in ["wav", "raw", "pcm"]:
         raise ValueError("Invalid response_format")
 
     buffer = io.BytesIO()
-    buffer.name = "audio.wav" if response_format == "wav" else "audio.pcm"
+    buffer.name = "audio." + response_format
     with sf.SoundFile(
         buffer,
         mode="w",
