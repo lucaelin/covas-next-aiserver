@@ -15,7 +15,9 @@ def init_tts(asset: str = "hexgrad/Kokoro-82M"):
         return
 
     model_path = cached_path(
-        "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/kokoro-v0_19.onnx"
+        # "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/kokoro-v0_19.onnx"
+        "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/kokoro-quant.onnx"
+        # "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/kokoro-quant-convinteger.onnx"
     ).as_posix()
     voices_path = cached_path(
         "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/voices.json"
