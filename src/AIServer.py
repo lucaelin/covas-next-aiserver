@@ -163,7 +163,8 @@ if __name__ == "__main__":
     uvicorn.run(app, host=config["host"], port=config["port"], log_level="info")
 """
 sample curl request to create a speech:
-curl -X POST "http://localhost:8080/v1/audio/speech" -H "Content-Type: application/json" -d "{\"input\":\"Hello, world!\", \"response_format\":\"wav\"}" > audio.wav
+curl -X POST "http://localhost:8080/v1/audio/speech" -H "Content-Type: application/json" -d '{"input":"Hello World.", "response_format":"raw", "voice":"af"}' | aplay -r 24000 -f S16_LE
+curl -X POST "http://localhost:8080/v1/audio/speech" -H "Content-Type: application/json" -d '{"input":"Hello World.", "response_format":"wav", "voice":"af"}' > audio.wav
 
 sample curl request to create a transcription:
 curl -X POST "http://localhost:8080/v1/audio/transcriptions" -F "audio=@./audio.wav" -F "language=en"
