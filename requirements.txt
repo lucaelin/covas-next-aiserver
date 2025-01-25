@@ -30,5 +30,5 @@ tokenizers==0.21.0
 transformers==4.47.1
 typing-extensions==4.12.2
 uvicorn==0.34.0
-useful-moonshine-onnx @ git+https://git@github.com/usefulsensors/moonshine.git#subdirectory=moonshine-onnx@8c381be
+useful-moonshine-onnx @ git+https://git@github.com/usefulsensors/moonshine.git@8c381be#subdirectory=moonshine-onnx
 fastapi==0.115.7
