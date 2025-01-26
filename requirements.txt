@@ -18,6 +18,7 @@ pydantic-core==2.23.3
 pyinstaller==6.11.1
 pyinstaller-hooks-contrib @ git+https://github.com/pyinstaller/pyinstaller-hooks-contrib.git@dbfd071
 python-multipart==0.0.20
+pywin32==308; platform_system == "Windows"
 pytest==8.3.4
 pyyaml==6.0.2
 requests==2.32.3

@@ -1,5 +1,7 @@
 import json
 from typing import TypedDict
+import os
+import sys
 
 from pick import pick
 from fastapi import FastAPI, File, Form, Request, UploadFile
@@ -159,7 +161,30 @@ async def create_embedding(data: dict):
     return embedding
 
 
+def set_quick_edit_mode(turn_on=None):
+    """Enable/Disable windows console Quick Edit Mode"""
+    import win32console
+
+    ENABLE_QUICK_EDIT_MODE = 0x40
+    ENABLE_EXTENDED_FLAGS = 0x80
+
+    screen_buffer = win32console.GetStdHandle(-10)
+    orig_mode = screen_buffer.GetConsoleMode()
+    is_on = orig_mode & ENABLE_QUICK_EDIT_MODE
+    if is_on != turn_on and turn_on is not None:
+        if turn_on:
+            new_mode = orig_mode | ENABLE_QUICK_EDIT_MODE
+        else:
+            new_mode = orig_mode & ~ENABLE_QUICK_EDIT_MODE
+        screen_buffer.SetConsoleMode(new_mode | ENABLE_EXTENDED_FLAGS)
+
+    return is_on if turn_on is None else turn_on
+
+
 if __name__ == "__main__":
+    if os.name == "nt" and sys.stdout.isatty():
+        set_quick_edit_mode(False)
+
     uvicorn.run(app, host=config["host"], port=config["port"], log_level="info")
 """
 sample curl request to create a speech:
@@ -168,4 +193,10 @@ curl -X POST "http://localhost:8080/v1/audio/speech" -H "Content-Type: applicati
 
 sample curl request to create a transcription:
 curl -X POST "http://localhost:8080/v1/audio/transcriptions" -F "audio=@./audio.wav" -F "language=en"
+
+sample curl request to create a chat completion:
+curl -X POST "http://localhost:8080/v1/chat/completions" -H "Content-Type: application/json" -d '{"messages":[{"role":"user","content":"Hello, how are you?"}]}' | jq
+
+sample curl request to create an embedding:
+curl -X POST "http://localhost:8080/v1/embeddings" -H "Content-Type: application/json" -d '{"input":"Hello, world!"}' | jq
 """
