@@ -63,8 +63,9 @@ jobs:
             --console  `
             --hidden-import=comtypes.stream  `
             --hidden-import=numpy.core.multiarray  `
-            --collect-all language_tags  `
-            --collect-all espeakng_loader  `
+            --collect-all language_tags `
+            --collect-all espeakng_loader `
+            --collect-all useful-moonshine-onnx `
             --add-binary ${{ env.ONNXRUNTIME_DLL }}:.  `
             --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
 
@@ -109,8 +110,9 @@ jobs:
           --console  `
           --hidden-import=comtypes.stream  `
           --hidden-import=numpy.core.multiarray  `
-          --collect-all language_tags  `
-          --collect-all espeakng_loader  `
+          --collect-all language_tags `
+          --collect-all espeakng_loader `
+          --collect-all useful-moonshine-onnx `
           --add-binary ${{ env.ONNXRUNTIME_DLL }}:.  `
           --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
         #  --add-binary ${{ env.DIRECTML_DLL }}:.
