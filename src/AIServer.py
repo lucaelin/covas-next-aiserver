@@ -59,9 +59,10 @@ def load_config() -> Config:
         )
 
     if not "embed_model_name" in config:
-        config["embed_model_name"] = pick(
-            options=embed_model_names, title="Select an Embedding model"
-        )[0]
+        # config["embed_model_name"] = pick(
+        #    options=embed_model_names, title="Select an Embedding model"
+        # )[0]
+        config["embed_model_name"] = "None"
 
     if not "host" in config:
         config["host"] = (
