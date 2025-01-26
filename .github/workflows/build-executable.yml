@@ -45,15 +45,19 @@ jobs:
         run: |
           $ONNXRUNTIME_DLL = python -c 'import os, onnxruntime; print(os.path.join(os.path.dirname(onnxruntime.__file__), "capi", "onnxruntime_providers_shared.dll"))'
           $LLAMACPP_DLL = python -c 'import os, llama_cpp; print(os.path.join(os.path.dirname(llama_cpp.__file__), "lib", "llama.dll"))'
+          $MOONSHINE_ASSETS = python -c 'import moonshine_onnx; print(moonshine_onnx.ASSETS_DIR)'
           echo "ONNXRUNTIME_DLL=$ONNXRUNTIME_DLL" >> $env:GITHUB_ENV
           echo "LLAMACPP_DLL=$LLAMACPP_DLL" >> $env:GITHUB_ENV
+          echo "MOONSHINE_ASSETS=$MOONSHINE_ASSETS" >> $env:GITHUB_ENV
           python -c 'import onnxruntime; print("onnxruntime path:", onnxruntime.__file__)'
           python -c 'import llama_cpp; print("llama_cpp path:", llama_cpp.__file__)'
+          python -c 'import moonshine_onnx; print("moonshine_onnx path:", moonshine_onnx.__file__)'
 
       - name: Debug environment variables
         run: |
           echo "ONNXRUNTIME_DLL=${{ env.ONNXRUNTIME_DLL }}"
           echo "LLAMACPP_DLL=${{ env.LLAMACPP_DLL }}"
+          echo "MOONSHINE_ASSETS=${{ env.MOONSHINE_ASSETS }}"
 
       - name: Create Executable for AIServer
         run: |
@@ -68,7 +72,8 @@ jobs:
             --collect-all useful-moonshine-onnx `
             --collect-all numba `
             --add-binary ${{ env.ONNXRUNTIME_DLL }}:.  `
-            --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
+            --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib `
+            --add-data ${{ env.MOONSHINE_ASSETS }}:.\moonshine_onnx\assets
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
@@ -113,10 +118,10 @@ jobs:
           --hidden-import=numpy.core.multiarray  `
           --collect-all language_tags `
           --collect-all espeakng_loader `
-          --collect-all useful-moonshine-onnx `
           --collect-all numba `
           --add-binary ${{ env.ONNXRUNTIME_DLL }}:.  `
-          --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
+          --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib `
+          --add-data ${{ env.MOONSHINE_ASSETS }}:.\moonshine_onnx\assets
         #  --add-binary ${{ env.DIRECTML_DLL }}:.
 
       - name: Upload build artifact
