@@ -66,6 +66,7 @@ jobs:
             --collect-all language_tags `
             --collect-all espeakng_loader `
             --collect-all useful-moonshine-onnx `
+            --collect-all numba `
             --add-binary ${{ env.ONNXRUNTIME_DLL }}:.  `
             --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
 
@@ -113,6 +114,7 @@ jobs:
           --collect-all language_tags `
           --collect-all espeakng_loader `
           --collect-all useful-moonshine-onnx `
+          --collect-all numba `
           --add-binary ${{ env.ONNXRUNTIME_DLL }}:.  `
           --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
         #  --add-binary ${{ env.DIRECTML_DLL }}:.
