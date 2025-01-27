@@ -251,7 +251,7 @@ def init_tts(asset: str = "vits-piper-en_US-ljspeech-high.tar.bz2"):
     return tts
 
 
-def tts(
+async def tts(
     model: sherpa_onnx.OfflineTts, text: str, speed: float = 1.0, voice: str = "nova"
 ):
     def generated_audio_callback(samples: np.ndarray, progress: float):
@@ -271,19 +271,20 @@ def tts(
         print("Error in generating audios. Please read previous error messages.")
         exit(1)
 
+    num_samples = 0
+
+    samples = samplerate.resample(audio.samples, 24000 / audio.sample_rate, "sinc_best")
+    sample_rate = 24000
+    num_samples += len(samples)
+    yield (samples, sample_rate)
+
+    end = time.time()
+
     elapsed_seconds = end - start
-    audio_duration = len(audio.samples) / audio.sample_rate
+    audio_duration = num_samples / 24000
     real_time_factor = elapsed_seconds / audio_duration
 
     print(f"The text is '{text}'")
     print(f"Elapsed seconds: {elapsed_seconds:.3f}")
     print(f"Audio duration in seconds: {audio_duration:.3f}")
     print(f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}")
-
-    # resample audio.samples to 24kHz to match openai
-    audio.samples = samplerate.resample(
-        audio.samples, 24000 / audio.sample_rate, "sinc_best"
-    )
-    audio.sample_rate = 24000
-
-    return audio

@@ -1,25 +1,55 @@
-import io
 import json
 from typing import TypedDict
-import soundfile as sf
-from pick import pick
+import os
+import sys
 
+from pick import pick
+from fastapi import FastAPI, File, Form, Request, UploadFile
+from fastapi.responses import JSONResponse, StreamingResponse
+import uvicorn
+
+from lib.embed import init_embed, embed, embed_model_names
 from lib.stt import init_stt, stt, stt_model_names
 from lib.tts import init_tts, tts, tts_model_names
 from lib.llm import init_llm, llm, llm_model_names
+
+
+def set_quick_edit_mode(turn_on=None) -> bool:
+    """Enable/Disable windows console Quick Edit Mode"""
+    import win32console  # pyright: ignore[reportMissingModuleSource]
+
+    ENABLE_QUICK_EDIT_MODE = 0x40
+    ENABLE_EXTENDED_FLAGS = 0x80
+
+    screen_buffer = win32console.GetStdHandle(-10)
+    orig_mode = screen_buffer.GetConsoleMode()
+    is_on = orig_mode & ENABLE_QUICK_EDIT_MODE
+    if is_on != turn_on and turn_on is not None:
+        if turn_on:
+            new_mode = orig_mode | ENABLE_QUICK_EDIT_MODE
+        else:
+            new_mode = orig_mode & ~ENABLE_QUICK_EDIT_MODE
+        screen_buffer.SetConsoleMode(new_mode | ENABLE_EXTENDED_FLAGS)
+
+    return is_on if turn_on is None else turn_on
+
+
+if os.name == "nt" and sys.stdout.isatty():
+    set_quick_edit_mode(False)
 
 
 class Config(TypedDict):
     tts_model_name: str
     stt_model_name: str
     llm_model_name: str
+    embed_model_name: str
     use_disk_cache: bool
     host: str
     port: int
 
 
 def load_config() -> Config:
-    config: Config = {}
+    config: dict | Config = {}
     try:
         with open("aiserver.config.json", "r") as f:
             config = Config(**json.load(f))
@@ -52,6 +82,12 @@ def load_config() -> Config:
             == "Enabled"
         )
 
+    if not "embed_model_name" in config:
+        # config["embed_model_name"] = pick(
+        #    options=embed_model_names, title="Select an Embedding model"
+        # )[0]
+        config["embed_model_name"] = "None"
+
     if not "host" in config:
         config["host"] = (
             input("Enter the IP to bind or leave empty for default [127.0.0.1]: ")
@@ -70,6 +106,7 @@ def load_config() -> Config:
     print(f'Selected STT model: {config["stt_model_name"]}')
     print(f'Selected LLM model: {config["llm_model_name"]}')
     print(f'Selected TTS model: {config["tts_model_name"]}')
+    print(f'Selected Embedding model: {config["embed_model_name"]}')
     return config
 
 
@@ -78,89 +115,90 @@ config = load_config()
 llm_model = init_llm(config["llm_model_name"], config["use_disk_cache"])
 tts_model = init_tts(config["tts_model_name"])
 stt_model = init_stt(config["stt_model_name"])
-
-# create flask api endpoint
-from flask import Flask, request, jsonify
-
-app = Flask(__name__)
+embed_model = init_embed(config["embed_model_name"])
 
 
-@app.route("/v1/chat/completions", methods=["POST"])
-@app.route("/chat/completions", methods=["POST"])
-def createChatCompletion():
-    chat = request.json
+# Create the FastAPI application
+app = FastAPI()
+
+
+@app.post("/v1/chat/completions")
+@app.post("/chat/completions")
+async def create_chat_completion(chat: dict):
+    """
+    Create a chat completion using the LLM.
+    """
     if not llm_model:
-        return jsonify({"error": "model not found"}), 400
+        return JSONResponse(content={"error": "model not found"}, status_code=400)
+
     if "messages" not in chat:
-        return jsonify({"error": "messages is required"}), 400
+        return JSONResponse(content={"error": "messages is required"}, status_code=400)
 
-    print(chat)
-
+    # Execute the LLM call
     completion = llm(llm_model, chat)
-    return jsonify(completion)
+    return completion
 
 
-@app.route("/v1/audio/speech", methods=["POST"])
-@app.route("/audio/speech", methods=["POST"])
-def createSpeech():
-    data = request.json
-
-    voice = data.get("voice")
-    input = data.get("input")
-    if not input:
-        return jsonify({"error": "input is required"}), 400
-    speed = float(data.get("speed", 1.0))
-
-    audio = tts(tts_model, input, speed, voice)
-
+@app.post("/v1/audio/speech")
+@app.post("/audio/speech")
+async def create_speech(request: Request):
+    """
+    Given text input (and optional speed/voice/format), generate TTS output.
+    This endpoint streams audio using an async generator.
+    """
+    data = await request.json()
+    text_input = data.get("input", "")
+    speed = data.get("speed", 1.0)
+    voice = data.get("voice", "nova")
     response_format = data.get("response_format", "wav")
-    if response_format == "pcm":
-        # TODO implement streaming response
 
-        buffer = io.BytesIO()
-        buffer.name = "audio.pcm"
-        sf.write(
-            buffer, audio.samples, audio.sample_rate, subtype="PCM_16", format="RAW"
-        )
-        buffer.seek(0)
-        return buffer.read()
+    stream = await tts(tts_model, text_input, speed, voice, response_format)
 
-    elif response_format == "wav":
-        buffer = io.BytesIO()
-        buffer.name = "audio.wav"
-        sf.write(
-            buffer, audio.samples, audio.sample_rate, subtype="PCM_16", format="WAV"
-        )
-        buffer.seek(0)
-        return buffer.read()
-
-    else:
-        # TODO implement other response formats, spec compliance
-        return jsonify({"error": "invalid response_format"}), 400
+    # Return a streaming response
+    return StreamingResponse(stream, media_type=f"audio/{response_format}")
 
 
-@app.route("/v1/audio/transcriptions", methods=["POST"])
-@app.route("/audio/transcriptions", methods=["POST"])
-def createTranscription():
-    # decode form data
-    data = request.form
+@app.post("/v1/audio/transcriptions")
+@app.post("/audio/transcriptions")
+async def create_transcription(
+    language: str = Form("en"), file: UploadFile = File(...)  # default language is 'en'
+):
+    """
+    Transcribe an audio file using the STT model.
+    """
+    contents = await file.read()
+    text, info = stt(stt_model, contents, language)
 
-    language = data.get("language", "en")
-    name, file = next(request.files.items())
-    print(name, file)
+    # Return text in a JSON payload
+    return {"text": "\n".join(text)}
 
-    text, info = stt(stt_model, file.stream.read(), language)
-    # text = "".join([segment.text for segment in segments])
-    return jsonify({"text": "\n".join(text)})  # TODO more details, spec compliance
+
+@app.post("/v1/embeddings")
+@app.post("/embeddings")
+async def create_embedding(data: dict):
+    """
+    Create embeddings from input text using the embedding model.
+    """
+    if not data or "input" not in data:
+        return JSONResponse(content={"error": "input is required"}, status_code=400)
+
+    embedding = embed(embed_model, data)
+    return embedding
 
 
 if __name__ == "__main__":
-    app.run(port=config["port"], host=config["host"], threaded=False)
-
+    uvicorn.run(app, host=config["host"], port=config["port"], log_level="info")
 """
 sample curl request to create a speech:
-curl -X POST "http://localhost:8080/v1/audio/speech" -H "Content-Type: application/json" -d "{\"input\":\"Hello, world!\", \"response_format\":\"wav\"}" > audio.wav
+curl -X POST "http://localhost:8080/v1/audio/speech" -H "Content-Type: application/json" -d '{"input":"Hello World.", "response_format":"raw", "voice":"af"}' | aplay -r 24000 -f S16_LE
+curl -X POST "http://localhost:8080/v1/audio/speech" -H "Content-Type: application/json" -d '{"input":"Hello World.", "response_format":"wav", "voice":"af"}' > audio.wav
 
 sample curl request to create a transcription:
 curl -X POST "http://localhost:8080/v1/audio/transcriptions" -F "audio=@./audio.wav" -F "language=en"
+
+sample curl request to create a chat completion:
+curl -X POST "http://localhost:8080/v1/chat/completions" -H "Content-Type: application/json" -d '{"messages":[{"role":"user","content":"Hello, how are you?"}]}' | jq
+
+sample curl request to create an embedding:
+curl -X POST "http://localhost:8080/v1/embeddings" -H "Content-Type: application/json" -d '{"input":"Hello, world!"}' | jq
 """

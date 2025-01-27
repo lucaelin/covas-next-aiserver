@@ -1,6 +1,10 @@
 name: Build Executable
 
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - main
+  pull_request: {}
 
 jobs:
   pyinstaller-build:
@@ -12,25 +16,26 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.12"
           cache: "pip"
 
       - name: Install dependencies
         run: |
-          pip uninstall numpy -y
-          pip install -r requirements.txt
-          python -c "import numpy; print('numpy version:', numpy.__version__)"
+          python -m pip install --upgrade pip setuptools
+          python -m pip install --force-reinstall -r requirements.txt
 
       - name: Install pyinstaller
         run: |
+          $Env:CL = "/Od"
           $Env:PYINSTALLER_COMPILE_BOOTLOADER = "true"
-          pip install --force-reinstall --ignore-installed --no-binary :all: pyinstaller==6.10.0
+          python -m pip install --force-reinstall --ignore-installed --no-binary :all: --no-cache pyinstaller@git+https://github.com/pyinstaller/pyinstaller.git@0d562b5
+          $Env:CL = ""
 
       - name: Install llamacpp
         run: |
           pip install --upgrade pip setuptools
           pip uninstall -y llama-cpp-python
-          pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.3.2 numpy==1.25.2
+          pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.2
 
       - name: Run tests
         run: |
@@ -40,30 +45,41 @@ jobs:
         run: |
           $ONNXRUNTIME_DLL = python -c 'import os, onnxruntime; print(os.path.join(os.path.dirname(onnxruntime.__file__), "capi", "onnxruntime_providers_shared.dll"))'
           $LLAMACPP_DLL = python -c 'import os, llama_cpp; print(os.path.join(os.path.dirname(llama_cpp.__file__), "lib", "llama.dll"))'
+          $MOONSHINE_ASSETS = python -c 'import moonshine_onnx; print(moonshine_onnx.ASSETS_DIR)'
           echo "ONNXRUNTIME_DLL=$ONNXRUNTIME_DLL" >> $env:GITHUB_ENV
           echo "LLAMACPP_DLL=$LLAMACPP_DLL" >> $env:GITHUB_ENV
+          echo "MOONSHINE_ASSETS=$MOONSHINE_ASSETS" >> $env:GITHUB_ENV
           python -c 'import onnxruntime; print("onnxruntime path:", onnxruntime.__file__)'
           python -c 'import llama_cpp; print("llama_cpp path:", llama_cpp.__file__)'
+          python -c 'import moonshine_onnx; print("moonshine_onnx path:", moonshine_onnx.__file__)'
 
       - name: Debug environment variables
         run: |
           echo "ONNXRUNTIME_DLL=${{ env.ONNXRUNTIME_DLL }}"
           echo "LLAMACPP_DLL=${{ env.LLAMACPP_DLL }}"
+          echo "MOONSHINE_ASSETS=${{ env.MOONSHINE_ASSETS }}"
 
       - name: Create Executable for AIServer
         run: |
-          pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
+          pyinstaller .\src\AIServer.py -y  `
+            --onedir  `
+            --clean  `
+            --console  `
+            --hidden-import=comtypes.stream  `
+            --hidden-import=numpy.core.multiarray  `
+            --collect-all language_tags `
+            --collect-all espeakng_loader `
+            --collect-all useful-moonshine-onnx `
+            --collect-all numba `
+            --add-binary ${{ env.ONNXRUNTIME_DLL }}:.  `
+            --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib `
+            --add-data ${{ env.MOONSHINE_ASSETS }}:.\moonshine_onnx\assets
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: AIServer_v${{ github.sha }}
           path: ./dist
-          compression-level: 0 # no compression
-
-      - name: Run e2e tests
-        run: |
-          python e2e/test_Executable.py
 
       - name: Add msbuild to PATH
         uses: microsoft/setup-msbuild@v2
@@ -79,15 +95,124 @@ jobs:
           pip install --upgrade pip setuptools
           pip uninstall -y llama-cpp-python
           $Env:CMAKE_ARGS = "-DGGML_VULKAN=on"
-          pip install --force-reinstall --ignore-installed --no-cache-dir llama-cpp-python==0.3.2 numpy==1.25.2
+          pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.2
+          python -c "import numpy; print('numpy version:', numpy.__version__)"
 
+      #- name: Install onnxruntime with DirectML support
+      #  run: |
+      #    pip uninstall -y onnxruntime
+      #    pip install onnxruntime-directml==1.20.1
+      #- name: Determine paths for onnxruntime with DirectML
+      #  run: |
+      #    $ONNXRUNTIME_DLL = python -c 'import os, onnxruntime; print(os.path.join(os.path.dirname(onnxruntime.__file__), "capi", "onnxruntime_providers_shared.dll"))'
+      #    $DIRECTML_DLL = python -c 'import os, onnxruntime; print(os.path.join(os.path.dirname(onnxruntime.__file__), "capi", "DirectML.dll"))'
+      #    echo "ONNXRUNTIME_DLL=$ONNXRUNTIME_DLL" >> $env:GITHUB_ENV
+      #    echo "DIRECTML_DLL=$DIRECTML_DLL" >> $env:GITHUB_ENV
       - name: Create Executable for AIServer with llamacpp[vulkan]
         run: |
-          pyinstaller .\src\AIServer.py -y --onedir --clean --console --hidden-import=comtypes.stream --add-binary ${{ env.ONNXRUNTIME_DLL }}:. --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib
+          pyinstaller .\src\AIServer.py -y  `
+          --onedir  `
+          --clean  `
+          --console  `
+          --hidden-import=comtypes.stream  `
+          --hidden-import=numpy.core.multiarray  `
+          --collect-all language_tags `
+          --collect-all espeakng_loader `
+          --collect-all numba `
+          --add-binary ${{ env.ONNXRUNTIME_DLL }}:.  `
+          --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib `
+          --add-data ${{ env.MOONSHINE_ASSETS }}:.\moonshine_onnx\assets
+        #  --add-binary ${{ env.DIRECTML_DLL }}:.
 
       - name: Upload build artifact
         uses: actions/upload-artifact@v4
         with:
           name: AIServer_v${{ github.sha }}-vulkan
           path: ./dist
-          compression-level: 0 # no compression
+
+  e2e-and-scan:
+    name: E2E Tests & Defender Scan
+    # This is required to run in a fresh VM to check if all python deps are bundled in the exe
+    # and to ensure Windows Defender considers the executable as downloaded from the internet
+    runs-on: windows-latest
+    needs: pyinstaller-build
+    steps:
+      - name: Prepare Windows Defender
+        # https://github.com/actions/runner-images/issues/855#issuecomment-626692949 may help to understand
+        run: |
+          & "C:\Program Files\Windows Defender\MpCmdRun.exe" -ListAllDynamicSignatures
+
+          # https://github.com/actions/runner-images/blob/61df9288f9be9f6aeaaaa4ad52a7332432913fc3/images/windows/scripts/build/Configure-WindowsDefender.ps1#L38-L44
+          Set-ItemProperty -Path 'HKLM:\SOFTWARE\Policies\Microsoft\Windows Advanced Threat Protection' -Name 'ForceDefenderPassiveMode' -Value '0' -Type 'DWORD'
+          Start-Service -DisplayName *Defend* -WhatIf
+          Start-Service -Name WinDefend
+
+          # Get-Item -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender"
+          # Get-Item -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender\SpyNet"
+          # I can't find any resource of this key in web also GitHub, but Copilot said... So testing in action runner may be interest :)
+          # Set-ItemProperty -Force -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender\SpyNet" -Name JoinMicrosoftSpyNet -Value 1
+          # Get-Item -Path "Registry::HKEY_LOCAL_MACHINE\SOFTWARE\Policies\Microsoft\Windows Defender\SpyNet"
+
+          # Remove cache: https://news.mynavi.jp/article/win10tips-410/
+          # & "C:\Program Files\Windows Defender\MpCmdRun.exe" -RemoveDefinitions -DynamicSignatures
+
+          # Enable cloud-based protection
+          Set-MpPreference -MAPSReporting Advanced
+          # Enable automatic sample submission
+          Set-MpPreference -SubmitSamplesConsent SendSafeSamples
+          # Enable behavior monitoring
+          Set-MpPreference -DisableBehaviorMonitoring $false
+          # Restart-Service -Name WinDefend
+
+          Set-Service -Name wuauserv -StartupType Manual -Status Running
+          & "C:\Program Files\Windows Defender\MpCmdRun.exe" -SignatureUpdate
+          Update-MpSignature
+          # Restart-Service -Name WinDefend
+          & "C:\Program Files\Windows Defender\MpCmdRun.exe" -ListAllDynamicSignatures
+
+          # Remove all exclusions
+          Remove-MpPreference -ExclusionPath (Get-MpPreference).ExclusionPath
+
+      - name: Make sure dynamic signatures are enabled ... or not
+        run: |
+          Get-MpComputerStatus
+
+          # Remove this to raise error if you REALIZED to enable Dynamic Signature scans
+          # if (!((& "C:\Program Files\Windows Defender\MpCmdRun.exe" -ListAllDynamicSignatures) | Select-String -Pattern "SignatureSet ID:")) {
+          #   Exit 42
+          # }
+          & "C:\Program Files\Windows Defender\MpCmdRun.exe" -ListAllDynamicSignatures
+
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: AIServer_v${{ github.sha }}
+          path: dist
+
+      - name: Run Windows Defender
+        run: |
+          & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -Trace -File "$(pwd)\dist"
+          # & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -Trace -File "$(pwd)\dist\AIGUI\AIGUI.exe"
+          # & "C:\Program Files\Windows Defender\MpCmdRun.exe" -Scan -ScanType 3 -Trace -File "$(pwd)\dist\Chat\Chat.exe"
+
+          # Do not enable this as possible, too slow ... Scanning all folders with this option? :<
+          # Start-MpScan -ScanPath "$pwd\dist"
+
+          Get-MpThreat
+          Get-MpThreatDetection
+
+      - name: Output scan results
+        run: |
+          Get-MpThreatDetection
+          $count = (Get-MpThreatDetection).Count
+
+          exit $count
+
+      - name: Run e2e tests
+        run: |
+          python --version
+          python -m pip install requests openai
+          python e2e/test_Executable.py

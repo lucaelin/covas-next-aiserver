@@ -1,5 +1,6 @@
-from sherpa_onnx import OfflineTts
-from src.lib.tts_sherpa import init_tts, tts, tts_model_names
+from random import sample
+from kokoro_onnx import Kokoro
+from src.lib.tts_kokoro import init_tts, tts, tts_model_names
 import pytest
 
 
@@ -11,10 +12,10 @@ def test_model_list():
 
 @pytest.mark.asyncio
 async def test_tts():
-    """Test that the TTS model can be initialized using vits-piper-en_US-ljspeech-high.tar.bz2"""
-    model = init_tts("vits-piper-en_US-ljspeech-high.tar.bz2")
-    assert model is not None
-    assert isinstance(model, OfflineTts)
+    """Test that the TTS model can be initialized using hexgrad/Kokoro-82M"""
+    model = init_tts("hexgrad/Kokoro-82M")
+    assert model[1] is not None
+    assert isinstance(model[1], Kokoro)
 
     """ test that the model can generate audio """
     prompt = "hello there"
