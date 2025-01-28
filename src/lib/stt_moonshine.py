@@ -36,6 +36,15 @@ def stt(transcribe, wav: bytes, language="en-US"):
     segments, info = transcribe(audio, language=language)
 
     end = time.time()
-    print("Transcribe time:", end - start)
+    elapsed_seconds = end - start
+    audio_duration = len(audio) / 16000
+    real_time_factor = elapsed_seconds / audio_duration
+
+    print(f"STT output: '{''.join(segments)}'")
+    print(f"STT Audio duration in seconds: {audio_duration:.3f}")
+    print(f"STT Elapsed seconds: {elapsed_seconds:.3f}")
+    print(
+        f"STT RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}"
+    )
 
     return segments, info

@@ -284,7 +284,9 @@ async def tts(
     audio_duration = num_samples / 24000
     real_time_factor = elapsed_seconds / audio_duration
 
-    print(f"The text is '{text}'")
-    print(f"Elapsed seconds: {elapsed_seconds:.3f}")
-    print(f"Audio duration in seconds: {audio_duration:.3f}")
-    print(f"RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}")
+    print(f"TTS input: '{text}'")
+    print(f"TTS Elapsed seconds: {elapsed_seconds:.3f}")
+    print(f"TTS Audio duration in seconds: {audio_duration:.3f}")
+    print(
+        f"TTS RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}"
+    )
