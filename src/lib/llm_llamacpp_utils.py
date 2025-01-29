@@ -171,7 +171,7 @@ def create_chat_completion_handler(
         grammar = llama_grammar.LlamaGrammar.from_string(grammar_str, verbose=False)
 
         if llama.cache:
-            llama._ctx.set_rng_seed(1)  # deterministic cache
+            # llama._ctx.set_rng_seed(1)  # TODO buggy on older versions and now not implemented on newer versions
             try:
                 cache_key, cache_length = llama.cache.find_prefix(prompt_tokens)
                 eval_prefix_len = Llama.longest_token_prefix(
