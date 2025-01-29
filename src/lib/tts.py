@@ -12,7 +12,7 @@ from .tts_kokoro import (
     tts_model_names as tts_model_names_kokoro,
 )
 
-tts_model_names = ["None"] + tts_model_names_sherpa + tts_model_names_kokoro
+tts_model_names = ["None"] + tts_model_names_kokoro + tts_model_names_sherpa
 
 
 def init_tts(model_name="None"):

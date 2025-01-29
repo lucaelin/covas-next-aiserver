@@ -15,12 +15,10 @@ def init_tts(asset: str = "hexgrad/Kokoro-82M"):
         return
 
     model_path = cached_path(
-        # "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/kokoro-v0_19.onnx"
-        "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/kokoro-v0_19.fp16.onnx"
-        # "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/kokoro-v0_19.int8.onnx"
+        "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/kokoro-v1.0.fp16.onnx"
     ).as_posix()
     voices_path = cached_path(
-        "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files/voices.bin"
+        "https://github.com/thewh1teagle/kokoro-onnx/releases/download/model-files-v1.0/voices-v1.0.bin"
     ).as_posix()
 
     kokoro = Kokoro(model_path, voices_path)
@@ -29,7 +27,7 @@ def init_tts(asset: str = "hexgrad/Kokoro-82M"):
     print("Warming up Kokoro...")
     kokoro.create(
         "Hello World",
-        voice="af",
+        voice="af_nova",
         speed=1.2,
         lang="en-us",
     )
@@ -43,7 +41,7 @@ async def tts(
     start = time.time()
 
     if voice == "nova":
-        voice = "af"
+        voice = "af_nova"
 
     stream = model[1].create_stream(
         text,
