@@ -1,4 +1,5 @@
 import json
+import traceback
 from typing import TypedDict
 import os
 import sys
@@ -187,7 +188,14 @@ async def create_embedding(data: dict):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=config["host"], port=config["port"], log_level="info")
+    try:
+        uvicorn.run(app, host=config["host"], port=config["port"], log_level="info")
+    except Exception as e:
+        print(e)
+        print(traceback.format_exc())
+        print("Press Enter to quit...")
+        input()
+        exit(1)
 """
 sample curl request to create a speech:
 curl -X POST "http://localhost:8080/v1/audio/speech" -H "Content-Type: application/json" -d '{"input":"Hello World.", "response_format":"raw", "voice":"af"}' | aplay -r 24000 -f S16_LE
