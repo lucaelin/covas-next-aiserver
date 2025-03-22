@@ -73,7 +73,7 @@ jobs:
           $nemo_source = "${{ env.NEMO_SOURCE }}"
           $exp_manager_path = Join-Path $nemo_source "utils\exp_manager.py"
           $content = Get-Content $exp_manager_path
-          $content = $content -replace "signal\.SIGKILL", "signal\.SIGTERM"
+          $content = $content -replace "signal\.SIGKILL", "signal.SIGTERM"
           Set-Content -Path $exp_manager_path -Value $content
 
       - name: Create Executable for AIServer
