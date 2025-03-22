@@ -33,4 +33,4 @@ typing-extensions==4.12.2
 uvicorn==0.34.0
 useful-moonshine-onnx @ git+https://git@github.com/usefulsensors/moonshine.git@8c381be#subdirectory=moonshine-onnx
 fastapi==0.115.7
-nemo_toolkit[asr]==2.2.0
+nemo_toolkit[asr]==2.1.0
