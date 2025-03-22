@@ -35,7 +35,7 @@ jobs:
         run: |
           pip install --upgrade pip setuptools
           pip uninstall -y llama-cpp-python
-          pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.2
+          pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.8
 
       - name: Run tests
         run: |
@@ -107,7 +107,7 @@ jobs:
           pip install --upgrade pip setuptools
           pip uninstall -y llama-cpp-python
           $Env:CMAKE_ARGS = "-DGGML_VULKAN=on"
-          pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.2
+          pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.8
           python -c "import numpy; print('numpy version:', numpy.__version__)"
 
       #- name: Install onnxruntime with DirectML support
