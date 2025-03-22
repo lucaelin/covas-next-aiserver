@@ -70,7 +70,7 @@ jobs:
       - name: Fix nemo windows compatibility using powershell
         # due to a bug in nemo, need to monkey patch the nemo\utils\exp_manager.py and replace signal.SIGKILL with signal.SIGTERM
         run: |
-          $nemo_source = ${{ env.NEMO_SOURCE }}
+          $nemo_source = "${{ env.NEMO_SOURCE }}"
           $exp_manager_path = Join-Path $nemo_source "utils\exp_manager.py"
           $content = Get-Content $exp_manager_path
           $content = $content -replace "signal\.SIGKILL", "signal\.SIGTERM"
