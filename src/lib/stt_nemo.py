@@ -1,0 +1,63 @@
+import io
+import time
+from numpy import ndarray
+import samplerate
+import soundfile as sf
+from nemo.collections.asr.models import EncDecMultiTaskModel
+
+stt_model_names = [
+    "nvidia/canary-180m-flash",
+    "nvidia/canary-1b-flash",
+]
+
+
+def init_stt(model_name="nvidia/canary-180m-flash"):
+
+    # load model
+    canary_model = EncDecMultiTaskModel.from_pretrained('nvidia/canary-180m-flash')
+    # update decode params
+    decode_cfg = canary_model.cfg.decoding
+    decode_cfg.beam.beam_size = 1
+    canary_model.change_decoding_strategy(decode_cfg)
+    
+    def transcribe(audio: ndarray, language):
+        output = canary_model.transcribe(
+            audio,
+            batch_size=1,  # batch size to run the inference with
+            pnc='yes',        # generate output with Punctuation and Capitalization
+        )
+        return output
+    
+    return transcribe
+
+
+def stt(transcribe, wav: bytes, language="en-US"):
+    # convert wav bytes to 16k S16_LE
+
+    start = time.time()
+    audio, rate = sf.read(io.BytesIO(wav))
+    end = time.time()
+    print("Read time:", end - start)
+    start = time.time()
+    audio = samplerate.resample(audio, 16000 / rate, "sinc_best")
+    end = time.time()
+    print("Resample time:", end - start)
+
+    start = time.time()
+
+    output = transcribe(audio, language=language)
+    print(output[0])
+
+    end = time.time()
+    elapsed_seconds = end - start
+    audio_duration = len(audio) / 16000
+    real_time_factor = elapsed_seconds / audio_duration
+
+    print(f"STT output: '{output[0].text}'")
+    print(f"STT Audio duration in seconds: {audio_duration:.3f}")
+    print(f"STT Elapsed seconds: {elapsed_seconds:.3f}")
+    print(
+        f"STT RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}"
+    )
+
+    return [output[0].text], None
