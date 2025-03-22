@@ -191,11 +191,11 @@ def main():
     
 """
 sample curl request to create a speech:
-curl -X POST "http://localhost:8080/v1/audio/speech" -H "Content-Type: application/json" -d '{"input":"Hello World.", "response_format":"raw", "voice":"af"}' | aplay -r 24000 -f S16_LE
-curl -X POST "http://localhost:8080/v1/audio/speech" -H "Content-Type: application/json" -d '{"input":"Hello World.", "response_format":"wav", "voice":"af"}' > audio.wav
+curl -X POST "http://localhost:8080/v1/audio/speech" -H "Content-Type: application/json" -d '{"input":"Hello World.", "response_format":"raw", "voice":"nova"}' | aplay -r 24000 -f S16_LE
+curl -X POST "http://localhost:8080/v1/audio/speech" -H "Content-Type: application/json" -d '{"input":"Hello World.", "response_format":"wav", "voice":"nova"}' > audio.wav
 
 sample curl request to create a transcription:
-curl -X POST "http://localhost:8080/v1/audio/transcriptions" -F "audio=@./audio.wav" -F "language=en"
+curl -X POST "http://localhost:8080/v1/audio/transcriptions" -F "file=@./audio.wav" -F "language=en"
 
 sample curl request to create a chat completion:
 curl -X POST "http://localhost:8080/v1/chat/completions" -H "Content-Type: application/json" -d '{"messages":[{"role":"user","content":"Hello, how are you?"}]}' | jq
