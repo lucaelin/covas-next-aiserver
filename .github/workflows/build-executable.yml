@@ -87,6 +87,7 @@ jobs:
             --collect-all language_tags `
             --collect-all espeakng_loader `
             --collect-all useful-moonshine-onnx `
+            --collect-all lightning_fabric `
             --collect-all numba `
             --collect-all torch `
             --collect-all nemo `
