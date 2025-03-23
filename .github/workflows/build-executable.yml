@@ -140,7 +140,13 @@ jobs:
           --hidden-import=numpy.core.multiarray  `
           --collect-all language_tags `
           --collect-all espeakng_loader `
+          --collect-all useful-moonshine-onnx `
+          --collect-all lightning_fabric `
           --collect-all numba `
+          --collect-all torch `
+          --collect-all nemo `
+          --add-data ${{ env.PYTORCH_SOURCE }}:. `
+          --add-data ${{ env.NEMO_SOURCE }}:. `
           --add-binary ${{ env.ONNXRUNTIME_DLL }}:.  `
           --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib `
           --add-data ${{ env.MOONSHINE_ASSETS }}:.\moonshine_onnx\assets
