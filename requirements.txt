@@ -28,7 +28,7 @@ sherpa-onnx==1.10.29
 soundfile==0.13.0
 SpeechRecognition==3.14.0
 tokenizers==0.21.0
-transformers==4.48.3
+transformers==4.50.0
 typing-extensions==4.12.2
 uvicorn==0.34.0
 useful-moonshine-onnx @ git+https://git@github.com/usefulsensors/moonshine.git@8c381be#subdirectory=moonshine-onnx
