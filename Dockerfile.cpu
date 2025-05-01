@@ -19,11 +19,20 @@ COPY requirements.txt /app
 # Install any needed packages specified in requirements.txt
 RUN pip install --break-system-packages --no-cache-dir -r requirements.txt
 
+RUN pip install --upgrade pip setuptools
+RUN pip uninstall -y llama-cpp-python
+RUN pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.8
+
 # Copy the source contents into the container at /app
 COPY ./src /app/src
 
-# Write the config.json file
-RUN echo "{\"host\":\"0.0.0.0\",\"port\":8080,\"tts_model_name\":\"vits-piper-en_US-libritts-high.tar.bz2\",\"stt_model_name\":\"tiny.en\",\"llm_model_name\":\"lucaelin/llama-3.2-3b-instruct-fc-gguf\",\"use_disk_cache\":false}" > /app/aiserver.config.json
+ENV AISERVER_LLM_MODEL_NAME=None
+ENV AISERVER_TTS_MODEL_NAME=None
+ENV AISERVER_STT_MODEL_NAME=None
+ENV AISERVER_EMBED_MODEL_NAME=None
+ENV AISERVER_USE_DISK_CACHE=False
+ENV AISERVER_HOST=0.0.0.0
+ENV AISERVER_PORT=8080
 
 # Make port 8080 available to the world outside this container
 EXPOSE 8080

@@ -59,46 +59,69 @@ def load_config() -> Config:
         pass
 
     if not "tts_model_name" in config:
-        config["tts_model_name"] = pick(
-            options=tts_model_names, title="Select a TTS model"
-        )[0]
+        if os.environ.get("AISERVER_TTS_MODEL_NAME"):
+            config["tts_model_name"] = os.environ["AISERVER_TTS_MODEL_NAME"]
+        else:
+            config["tts_model_name"] = pick(
+                options=tts_model_names, title="Select a TTS model"
+            )[0]
 
     if not "stt_model_name" in config:
-        config["stt_model_name"] = pick(
-            options=stt_model_names, title="Select a STT model"
-        )[0]
+        if os.environ.get("AISERVER_STT_MODEL_NAME"):
+            config["stt_model_name"] = os.environ["AISERVER_STT_MODEL_NAME"]
+        else:
+            config["stt_model_name"] = pick(
+                options=stt_model_names, title="Select a STT model"
+            )[0]
 
     if not "llm_model_name" in config:
-        config["llm_model_name"] = pick(
-            options=llm_model_names, title="Select a LLM model"
-        )[0]
+        if os.environ.get("AISERVER_LLM_MODEL_NAME"):
+            config["llm_model_name"] = os.environ["AISERVER_LLM_MODEL_NAME"]
+        else:
+            config["llm_model_name"] = pick(
+                options=llm_model_names, title="Select a LLM model"
+            )[0]
 
     if not "use_disk_cache" in config:
-        config["use_disk_cache"] = (
-            pick(
-                ["Disabled", "Enabled"],
-                "Enable LLM Disk cache? This may speed up response times if the disk is faster than prompt evaluation, but also doubles memory usage.",
-            )[0]
-            == "Enabled"
-        )
+        if os.environ.get("AISERVER_USE_DISK_CACHE"):
+            config["use_disk_cache"] = (
+                os.environ["AISERVER_USE_DISK_CACHE"].lower() == "true"
+            )
+        else:
+            config["use_disk_cache"] = (
+                pick(
+                    ["Disabled", "Enabled"],
+                    "Enable LLM Disk cache? This may speed up response times if the disk is faster than prompt evaluation, but also doubles memory usage.",
+                )[0]
+                == "Enabled"
+            )
 
     if not "embed_model_name" in config:
-        # config["embed_model_name"] = pick(
-        #    options=embed_model_names, title="Select an Embedding model"
-        # )[0]
-        config["embed_model_name"] = "None"
+        if os.environ.get("AISERVER_EMBED_MODEL_NAME"):
+            config["embed_model_name"] = os.environ["AISERVER_EMBED_MODEL_NAME"]
+        else:
+            config["embed_model_name"] = pick(
+                options=embed_model_names, title="Select an Embedding model"
+            )[0]
+        # config["embed_model_name"] = "None"
 
     if not "host" in config:
-        config["host"] = (
-            input("Enter the IP to bind or leave empty for default [127.0.0.1]: ")
-            or "127.0.0.1"
-        )
+        if os.environ.get("AISERVER_HOST"):
+            config["host"] = os.environ["AISERVER_HOST"]
+        else:
+            config["host"] = (
+                input("Enter the IP to bind or leave empty for default [127.0.0.1]: ")
+                or "127.0.0.1"
+            )
 
     if not "port" in config:
-        config["port"] = int(
-            input("Enter the port number or leave empty for default port [8080]: ")
-            or "8080"
-        )
+        if os.environ.get("AISERVER_PORT"):
+            config["port"] = int(os.environ["AISERVER_PORT"])
+        else:
+            config["port"] = int(
+                input("Enter the port number or leave empty for default port [8080]: ")
+                or "8080"
+            )
 
     if config["port"] < 1025 or config["port"] > 65535:
         raise ValueError("Port number must be between 1025 and 65535")
@@ -187,8 +210,9 @@ async def create_embedding(data: dict):
 
 
 def main():
-        uvicorn.run(app, host=config["host"], port=config["port"], log_level="info")
-    
+    uvicorn.run(app, host=config["host"], port=config["port"], log_level="info")
+
+
 """
 sample curl request to create a speech:
 curl -X POST "http://localhost:8080/v1/audio/speech" -H "Content-Type: application/json" -d '{"input":"Hello World.", "response_format":"raw", "voice":"nova"}' | aplay -r 24000 -f S16_LE
