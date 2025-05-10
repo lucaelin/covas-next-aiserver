@@ -1,6 +1,7 @@
 from typing import Any, AsyncGenerator, Tuple
 import io
 import soundfile as sf
+import numpy as np
 from .tts_sherpa import (
     init_tts as init_tts_sherpa,
     tts as tts_sherpa,
@@ -51,7 +52,8 @@ async def audio_stream_generator(stream, response_format):
             # print("chunk:", len(chunk))
             current_pos = buffer.tell()
             # print("current_pos:", current_pos)
-            wfile.write(chunk)
+            if len(chunk):
+                wfile.write(chunk)
             buffer.seek(current_pos)
             data = buffer.read()
             # print(f"audio_stream_generator: {len(data)}")
@@ -63,6 +65,15 @@ async def tts(
 ) -> AsyncGenerator[bytes, Any]:
     model_name = model[0]
     model = model[1]
+
+    if input.strip() == "":
+        print("Empty input, returning empty stream")
+
+        async def _empty_input_async_generator():
+            # This async generator yields the single item expected by audio_stream_generator
+            yield (b"", 24000)
+
+        return audio_stream_generator(_empty_input_async_generator(), response_format)
 
     if model_name in tts_model_names_kokoro:
         stream = tts_kokoro(model, input, speed, voice)

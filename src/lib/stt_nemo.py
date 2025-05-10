@@ -57,8 +57,10 @@ def stt(transcribe, wav: bytes, language="en-US"):
     end = time.time()
     print("Resample time:", end - start)
 
-    start = time.time()
+    # normalize audio
+    audio = audio / max(abs(audio))
 
+    start = time.time()
     output = transcribe(audio, language=language.split("-")[0])
     print(output[0])
 
