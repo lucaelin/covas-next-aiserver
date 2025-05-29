@@ -15,6 +15,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   vulkan-tools \
   libvulkan-dev \
   spirv-tools \
+  glslc \ 
   libvulkan1 \
   && rm -rf /var/lib/apt/lists/*
 
