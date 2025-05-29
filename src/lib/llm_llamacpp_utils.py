@@ -23,6 +23,7 @@ def create_chat_completion_handler(
     tool_use_parser: (
         Callable[[re.Match], List[llama_types.ChatCompletionFunction]] | None
     ) = None,
+    only_functions: bool = False,
     bos_token: str | None = None,
     eos_token: str | None = None,
     **kwargs,  # type: ignore
@@ -100,7 +101,7 @@ def create_chat_completion_handler(
                     tool["function"] for tool in tools if "function" in tool
                 ]
                 variables["tool_choice"] = tool_choice if tool_choice else "auto"
-                variables["tools"] = tools
+                variables["tools"] = variables["functions"] if only_functions else tools
             if documents:
                 variables["documents"] = documents
 
