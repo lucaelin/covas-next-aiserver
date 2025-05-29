@@ -9,7 +9,6 @@ from typing import Literal
 from transformers.models.opt.modeling_opt import OPTSdpaAttention
 
 stt_model_names = [
-    "nvidia/parakeet-tdt-0.6b-v2",
     "nvidia/canary-180m-flash",
     "nvidia/canary-1b-flash",
 ]
