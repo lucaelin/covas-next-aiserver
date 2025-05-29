@@ -13,6 +13,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   git \
   mesa-vulkan-drivers \
   vulkan-tools \
+  libvulkan-dev \
+  spirv-tools \
   libvulkan1 \
   && rm -rf /var/lib/apt/lists/*
 
