@@ -11,6 +11,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   portaudio19-dev \ 
   cmake \
   git \
+  mesa-vulkan-drivers \
+  vulkan-tools \
+  libvulkan1 \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container at /app
@@ -21,7 +24,7 @@ RUN pip install --break-system-packages --no-cache-dir -r requirements.txt
 
 RUN pip install --upgrade pip setuptools
 RUN pip uninstall -y llama-cpp-python
-RUN pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.8
+RUN CMAKE_ARGS="-DGGML_VULKAN=on" pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.8
 
 # Copy the source contents into the container at /app
 COPY ./src /app/src
