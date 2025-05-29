@@ -24,7 +24,8 @@ RUN pip install --break-system-packages --no-cache-dir -r requirements.txt
 
 RUN pip install --upgrade pip setuptools
 RUN pip uninstall -y llama-cpp-python
-RUN CMAKE_ARGS="-DGGML_VULKAN=on" pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.8
+ENV CMAKE_ARGS="-DGGML_VULKAN=on"
+RUN pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.8
 
 # Copy the source contents into the container at /app
 COPY ./src /app/src
