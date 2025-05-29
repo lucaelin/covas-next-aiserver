@@ -17,6 +17,8 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   spirv-tools \
   glslc \ 
   libvulkan1 \
+  libxext6 \
+  libegl1 \
   && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container at /app
