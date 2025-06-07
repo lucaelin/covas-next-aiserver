@@ -76,7 +76,7 @@ jobs:
             --collect-all kokoro_onnx `
             --add-binary ${{ env.ONNXRUNTIME_DLL }}:.  `
             --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib `
-            --add-data ${{ env.MOONSHINE_ASSETS }}:.\moonshine_onnx\assets
+            --add-data ${{ env.MOONSHINE_ASSETS }}:.\moonshine_onnx\assets `
             --add-data ${{ env.KOKORO_ASSETS }}:.\kokoro_onnx
 
       - name: Upload build artifact
@@ -125,7 +125,7 @@ jobs:
           --collect-all useful-moonshine-onnx `
           --add-binary ${{ env.ONNXRUNTIME_DLL }}:.  `
           --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib `
-          --add-data ${{ env.MOONSHINE_ASSETS }}:.\moonshine_onnx\assets
+          --add-data ${{ env.MOONSHINE_ASSETS }}:.\moonshine_onnx\assets `
           --add-data ${{ env.KOKORO_ASSETS }}:.\kokoro_onnx
         #  --add-binary ${{ env.DIRECTML_DLL }}:.
 
