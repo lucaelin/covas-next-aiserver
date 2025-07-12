@@ -238,7 +238,7 @@ def init_tts(asset: str = "vits-piper-en_US-ljspeech-high.tar.bz2"):
             ),
             provider="cpu",
             debug=False,
-            num_threads=4,
+            num_threads=8,
         ),
         rule_fsts="",
         max_num_sentences=2,

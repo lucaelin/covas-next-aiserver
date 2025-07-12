@@ -2,7 +2,7 @@ from typing import Any, AsyncGenerator, Tuple
 import io
 import soundfile as sf
 import numpy as np
-from .tts_sherpa import (
+from .tts_sherpa_vits import (
     init_tts as init_tts_sherpa,
     tts as tts_sherpa,
     tts_model_names as tts_model_names_sherpa,

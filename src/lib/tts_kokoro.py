@@ -69,3 +69,14 @@ async def tts(
     print(
         f"TTS RTF: {elapsed_seconds:.3f}/{audio_duration:.3f} = {real_time_factor:.3f}"
     )
+
+
+async def main():
+    tts_model = init_tts("hexgrad/Kokoro-82M")
+    text = "Hello, this is a test of the TTS system."
+    async_generator = tts(tts_model, text, speed=1.0, voice="nova")
+    async for audio, sample_rate in async_generator:
+        print(f"Generated audio with {len(audio)} samples at {sample_rate} Hz")
+if __name__ == "__main__":
+    import asyncio
+    asyncio.run(main())
