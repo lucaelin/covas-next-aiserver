@@ -1,5 +1,5 @@
 from sherpa_onnx import OfflineTts
-from src.lib.tts_sherpa import init_tts, tts, tts_model_names
+from src.lib.tts_sherpa_vits import init_tts, tts, tts_model_names
 import pytest
 
 
