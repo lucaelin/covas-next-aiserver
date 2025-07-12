@@ -25,7 +25,7 @@ pyyaml==6.0.2
 requests==2.32.3
 samplerate==0.2.1
 -f https://k2-fsa.github.io/sherpa/onnx/cpu.html
-sherpa-onnx==1.10.29
+sherpa-onnx==1.12.6
 soundfile==0.13.0
 SpeechRecognition==3.14.0
 tokenizers==0.21.0
@@ -35,3 +35,4 @@ uvicorn==0.34.0
 useful-moonshine-onnx @ git+https://git@github.com/usefulsensors/moonshine.git@8c381be#subdirectory=moonshine-onnx
 fastapi==0.115.7
 onnx-asr==0.6.1
+pysilero_vad==2.0.1
