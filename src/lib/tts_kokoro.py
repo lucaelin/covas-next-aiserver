@@ -42,12 +42,31 @@ async def tts(
 
     if voice == "nova":
         voice = "af_nova"
+        
+    # Determine lang from voice
+    lang = 'en-us'
+    if voice.startswith("af_") or voice.startswith("am_"):
+        lang = "en-us"
+    if voice.startswith("bf_") or voice.startswith("bm_"):
+        lang = "en-gb"
+    if voice.startswith("ef_") or voice.startswith("em_"):
+        lang = "es-es"
+    if voice.startswith("ff_") or voice.startswith("fm_"):
+        lang = "fr-fr"
+    if voice.startswith("hf_") or voice.startswith("hm_"):
+        lang = "hi"
+    if voice.startswith("if_") or voice.startswith("im_"):
+        lang = "it"
+    if voice.startswith("pf_") or voice.startswith("pm_"):
+        lang = "pt-br"
+    if voice.startswith("gf_") or voice.startswith("gm_"):
+        lang = "de-de"
 
     stream = model[1].create_stream(
         text,
         voice=voice,
         speed=speed,
-        lang="en-us",
+        lang=lang,
     )
 
     num_samples = 0
