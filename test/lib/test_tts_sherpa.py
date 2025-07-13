@@ -12,7 +12,7 @@ def test_model_list():
 @pytest.mark.asyncio
 async def test_tts():
     """Test that the TTS model can be initialized using vits-piper-en_US-ljspeech-high.tar.bz2"""
-    model = init_tts("vits-piper-en_US-ljspeech-high.tar.bz2")
+    model = init_tts("vits-piper-en_US-ljspeech-high-fp16.tar.bz2")
     assert model is not None
     assert isinstance(model, OfflineTts)
 
