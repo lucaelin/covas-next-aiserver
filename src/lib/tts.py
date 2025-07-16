@@ -28,7 +28,7 @@ def init_tts(model_name="None"):
         model = init_tts_kokoro(model_name)
         return (model_name, model)
 
-    return None
+    return (model_name, None)
 
 
 async def audio_stream_generator(stream, response_format):

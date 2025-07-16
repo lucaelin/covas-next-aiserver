@@ -197,7 +197,7 @@ tts_model_names = [
 ]
 
 
-def init_tts(asset: str = "vits-piper-en_US-ljspeech-high.tar.bz2"):
+def init_tts(asset: str = "vits-piper-en_US-ljspeech-high-fp16.tar.bz2"):
     if asset == "None":
         return
 

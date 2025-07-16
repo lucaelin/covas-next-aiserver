@@ -7,7 +7,7 @@ from openai import OpenAI
 default_config = {
     "host": "127.0.0.1",
     "port": 8080,
-    "tts_model_name": "vits-piper-en_US-ljspeech-high.tar.bz2",
+    "tts_model_name": "vits-piper-en_US-ljspeech-high-fp16.tar.bz2",
     "stt_model_name": "tiny.en",
     "llm_model_name": "lmstudio-community/Llama-3.2-1B-Instruct-GGUF",
     "embed_model_name": "lmstudio-community/granite-embedding-107m-multilingual-GGUF",
