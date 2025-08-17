@@ -10,6 +10,7 @@ import sherpa_onnx
 #from .stt_sherpa_canary import init, transcribe
 
 stt_model_names = [
+    "sherpa-onnx-nemo-parakeet-tdt-0.6b-v3-int8.tar.bz2",
     "sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2",
     "sherpa-onnx-nemo-parakeet-tdt-0.6b-v2.tar.bz2",
     "sherpa-onnx-nemo-canary-180m-flash-en-es-de-fr-int8.tar.bz2",
