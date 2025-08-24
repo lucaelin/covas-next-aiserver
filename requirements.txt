@@ -35,3 +35,4 @@ uvicorn==0.34.0
 useful-moonshine-onnx @ git+https://git@github.com/usefulsensors/moonshine.git@8c381be#subdirectory=moonshine-onnx
 fastapi==0.115.7
 onnx-asr==0.6.1
+kittentts @ https://github.com/KittenML/KittenTTS/releases/download/0.1/kittentts-0.1.0-py3-none-any.whl

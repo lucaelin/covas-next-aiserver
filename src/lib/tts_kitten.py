@@ -7,11 +7,11 @@ import numpy as np
 import samplerate
 
 tts_model_names = [
-    "KittenML/kitten-tts-nano-0.1",
+    "KittenML/kitten-tts-nano-0.2",
 ]
 
 
-def init_tts(asset: str = "KittenML/kitten-tts-nano-0.1"):
+def init_tts(asset: str = "KittenML/kitten-tts-nano-0.2"):
     m = KittenTTS(asset)
     return (asset, m)
 
