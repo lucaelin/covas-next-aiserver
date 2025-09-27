@@ -4,6 +4,9 @@ from typing import Any
 from llama_cpp import Llama
 
 model_presets: dict[str, dict[str, Any]] = {
+    #"ggml-org/embeddinggemma-300M-GGUF": {
+    #    "filename": "embeddinggemma-300M-Q8_0.gguf",
+    #},
     "lmstudio-community/granite-embedding-107m-multilingual-GGUF": {
         "filename": "granite-embedding-107m-multilingual-Q8_0.gguf",
         "max_context": 512 * 16,
