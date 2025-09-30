@@ -74,6 +74,7 @@ jobs:
             --collect-all espeakng_loader `
             --collect-all useful-moonshine-onnx `
             --collect-all kokoro_onnx `
+            --collect-all scipy `
             --add-binary ${{ env.ONNXRUNTIME_DLL }}:.  `
             --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib `
             --add-data ${{ env.MOONSHINE_ASSETS }}:.\moonshine_onnx\assets `
@@ -123,6 +124,8 @@ jobs:
           --collect-all language_tags `
           --collect-all espeakng_loader `
           --collect-all useful-moonshine-onnx `
+          --collect-all kokoro_onnx `
+          --collect-all scipy `
           --add-binary ${{ env.ONNXRUNTIME_DLL }}:.  `
           --add-binary ${{ env.LLAMACPP_DLL }}:.\llama_cpp\lib `
           --add-data ${{ env.MOONSHINE_ASSETS }}:.\moonshine_onnx\assets `
