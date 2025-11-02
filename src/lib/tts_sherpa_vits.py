@@ -116,6 +116,8 @@ tts_model_names = [
     "vits-piper-en_US-libritts-high.tar.bz2",
     "vits-piper-en_US-libritts_r-medium.tar.bz2",
     "vits-piper-en_US-ljspeech-high-fp16.tar.bz2",
+    "vits-piper-en_US-ljspeech-high-int8.tar.bz2",
+    "vits-piper-en_US-ljspeech-high.tar.bz2",
     "vits-piper-en_US-ljspeech-medium.tar.bz2",
     "vits-piper-en_US-norman-medium.tar.bz2",
     "vits-piper-en_US-ryan-high.tar.bz2",
@@ -197,7 +199,7 @@ tts_model_names = [
 ]
 
 
-def init_tts(asset: str = "vits-piper-en_US-ljspeech-high-fp16.tar.bz2"):
+def init_tts(asset: str = "vits-piper-en_US-ljspeech-high.tar.bz2"):
     if asset == "None":
         return
 
