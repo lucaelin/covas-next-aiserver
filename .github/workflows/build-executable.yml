@@ -92,7 +92,7 @@ jobs:
       - name: Install Vulkan SDK
         uses: humbletim/install-vulkan-sdk@v1.2
         with:
-          version: 1.4.328.1
+          version: 1.3.296.0
           cache: true
 
       - name: Install llamacpp with Vulkan support
@@ -100,7 +100,7 @@ jobs:
           pip install --upgrade pip setuptools
           pip uninstall -y llama-cpp-python
           $Env:CMAKE_ARGS = "-DGGML_VULKAN=on"
-          pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.8
+          pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.16
           python -c "import numpy; print('numpy version:', numpy.__version__)"
 
       #- name: Install onnxruntime with DirectML support
