@@ -28,8 +28,8 @@ class UnicodeProcessor:
 
     def _text_to_unicode_values(self, text: str) -> np.ndarray:
         unicode_values = np.array(
-            [ord(char) for char in text], dtype=np.uint16
-        )  # 2 bytes
+            [ord(char) for char in text], dtype=np.uint32
+        )  # 4 bytes to cover all Unicode code points
         return unicode_values
 
     def __call__(self, text_list: list[str]) -> tuple[np.ndarray, np.ndarray]:
@@ -353,13 +353,14 @@ def init_tts(asset: str = "supertonic-v1"):
 
     voice_base_url = "https://huggingface.co/Supertone/supertonic/resolve/main/voice_styles"
     voice_files = ["F1.json", "F2.json", "M1.json", "M2.json"]
-    voices = {}
+    voices: dict[str, Style] = {}
     print("Downloading/Loading Supertonic voices...")
     try:
         for filename in voice_files:
             url = f"{voice_base_url}/{filename}"
             voice_name = filename.replace(".json", "")
-            voices[voice_name] = cached_path(url).as_posix()
+            path = cached_path(url).as_posix()
+            voices[voice_name] = load_voice_style([path])
     except Exception as e:
         print(f"Failed to download voices: {e}")
         return None
@@ -378,7 +379,7 @@ def init_tts(asset: str = "supertonic-v1"):
 
 
 async def tts(
-    model: tuple[str, TextToSpeech, dict[str, str]], text: str, speed: float = 1.0, voice: str = "M1"
+    model: tuple[str, TextToSpeech, dict[str, Style]], text: str, speed: float = 1.0, voice: str = "M1"
 ) -> AsyncGenerator[tuple[np.ndarray, int], None]:
     start = time.time()
     
@@ -387,20 +388,14 @@ async def tts(
 
     asset_path, tts_engine, voices = model
     
-    # voice argument is treated as voice name or path to style json
-    voice_path = None
+    if voice == "nova":
+        voice = 'F1'
     
     # Check if voice is in pre-downloaded voices
     if voice in voices:
-        voice_path = voices[voice]
+        style = voices[voice]
     else:
         raise ValueError(f"Voice {voice} not found in available voices: {list(voices.keys())}")
-
-    try:
-        style = load_voice_style([voice_path])
-    except Exception as e:
-        print(f"Failed to load voice style {voice_path}: {e}")
-        return
 
     text_list = chunk_text(text)
     
