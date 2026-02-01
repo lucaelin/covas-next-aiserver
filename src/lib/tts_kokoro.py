@@ -42,15 +42,15 @@ async def tts(
 
     if voice == "nova":
         voice = "af_nova"
-        
+
     # Determine lang from voice
-    lang = 'en-us'
+    lang = "en-us"
     if voice.startswith("af_") or voice.startswith("am_"):
         lang = "en-us"
     if voice.startswith("bf_") or voice.startswith("bm_"):
         lang = "en-gb"
     if voice.startswith("ef_") or voice.startswith("em_"):
-        lang = "es-es"
+        lang = "es"
     if voice.startswith("ff_") or voice.startswith("fm_"):
         lang = "fr-fr"
     if voice.startswith("hf_") or voice.startswith("hm_"):
@@ -96,6 +96,9 @@ async def main():
     async_generator = tts(tts_model, text, speed=1.0, voice="nova")
     async for audio, sample_rate in async_generator:
         print(f"Generated audio with {len(audio)} samples at {sample_rate} Hz")
+
+
 if __name__ == "__main__":
     import asyncio
+
     asyncio.run(main())
