@@ -35,7 +35,7 @@ jobs:
         run: |
           pip install --upgrade pip setuptools
           pip uninstall -y llama-cpp-python
-          pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.8
+          pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.16
 
       - name: Run tests
         run: |

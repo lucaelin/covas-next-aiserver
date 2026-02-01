@@ -21,7 +21,7 @@ RUN pip install --break-system-packages --no-cache-dir -r requirements.txt
 
 RUN pip install --upgrade pip setuptools
 RUN pip uninstall -y llama-cpp-python
-RUN pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.8
+RUN pip install --force-reinstall --ignore-installed --no-cache-dir --no-deps llama-cpp-python==0.3.16
 
 # Copy the source contents into the container at /app
 COPY ./src /app/src
