@@ -1,6 +1,17 @@
 # COVAS:NEXT AIServer
 
-## Running on Linux
+> [!WARNING]
+> This project is superseded by COVAS:Next plugins and no longer actively maintained.
+
+## Windows
+
+Download the executable from the releases page, a interactive terminal window should spawn with setup options.
+
+## Linux
+
+A docker image is provided in the github registry, since no interactive terminal is available, configuration must be done via ENV variables or a mounted config file.
+
+## Setting up a Linux development environment
 
 Install pyenv ([Docs](https://github.com/pyenv/pyenv?tab=readme-ov-file#a-getting-pyenv))
 
